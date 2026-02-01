@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2E1A47">
+    <title>Acwa - Operations Dashboard 2026</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-lilac: #9273DA; 
+            --brand-dark: #2E2044;
+            --brand-lime: #D2F050; 
+            --bg-body: #F9F7FC;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-body);
+            color: var(--brand-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAVBAR */
+        .acwa-navbar {
+            background-color: transparent;
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: all 0.4s ease;
+        }
+
+        .acwa-navbar.scrolled {
+            background-color: #2E1A47;
+            padding: 10px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .acwa-navbar .container-fluid {
+            padding: 0 50px;
+            max-width: 100%;
+        }
+
+        .navbar-brand svg {
+            height: 85px;
+            width: auto;
+            display: block;
+            transition: height 0.3s;
+        }
+        
+        .acwa-navbar.scrolled .navbar-brand svg { height: 60px; }
+        .navbar-brand svg path { fill: #ffffff !important; }
+
+        /* Standard Links */
+        .nav-link {
+            color: rgba(255,255,255,0.95) !important;
+            font-size: 15px;
+            font-weight: 500;
+            margin: 0 12px;
+            text-transform: capitalize;
+        }
+        .nav-link:hover { color: var(--brand-lime) !important; }
+        
+        /* ACTION BUTTONS CONTAINER */
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Space between buttons */
+            margin-left: 20px;
+        }
+
+        /* 1. SAP Button (Secondary/Outline) */
+        .btn-sap {
+            border: 2px solid rgba(255,255,255,0.8);
+            color: white;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-sap:hover {
+            background-color: white;
+            color: var(--brand-dark);
+            border-color: white;
+        }
+
+        /* 2. Planned Leaves Button (Primary/Lime) */
+        .btn-leaves {
+            background-color: var(--brand-lime);
+            color: var(--brand-dark);
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            border: none;
+            text-decoration: none;
+            transition: transform 0.2s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-leaves:hover { 
+            transform: scale(1.05); 
+            background-color: #E0F780; 
+            color: var(--brand-dark);
+        }
+
+        /* HERO SECTION */
+        .hero-section {
+            background-color: var(--brand-lilac);
+            height: 60vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 8%;
+            padding-top: 80px;
+            position: relative;
+        }
+
+        .hero-text {
+            color: var(--brand-dark);
+            font-size: 48px;
+            font-weight: 500;
+            line-height: 1.2;
+            text-align: left;
+            max-width: 600px;
+        }
+        .hero-text span { color: white; }
+
+        /* MAIN CONTENT */
+        .container-main {
+            max-width: 1600px;
+            width: 95%;
+            margin: -80px auto 60px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .shift-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 30px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .shift-btn {
+            padding: 12px 35px;
+            font-weight: 600;
+            border: 2px solid var(--brand-lilac);
+            background: transparent;
+            color: var(--brand-lilac);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .shift-btn.active, .shift-btn:hover { background: var(--brand-lilac); color: white; }
+
+        /* CALENDAR */
+        .calendar-container { padding: 40px; }
+        .month-title { text-align: center; color: var(--brand-dark); font-size: 2em; font-weight: 700; margin-bottom: 30px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .day-header { text-align: center; font-weight: 700; color: #888; font-size: 14px; text-transform: uppercase; padding-bottom: 15px; }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid #f4f4f4;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(146, 115, 218, 0.25); border-color: var(--brand-lilac); }
+        .calendar-day.day-shift { background: white; border: 3px solid var(--brand-lilac); color: var(--brand-dark); }
+        .calendar-day.night-shift { background: var(--brand-dark); color: white; border: 3px solid var(--brand-dark); }
+        .calendar-day.off-shift { background: #f9f9f9; color: #bbb; border: 1px dashed #ddd; }
+        
+        .calendar-day .date { font-weight: 700; font-size: 20px; margin-bottom: 5px; }
+        .calendar-day .shift { font-size: 13px; text-transform: uppercase; font-weight: 600; }
+
+        /* FOOTER */
+        .brand-footer { background-color: var(--brand-lilac); padding: 80px 50px; }
+        .footer-content { max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        
+        .footer-logo svg { height: 80px; width: auto; }
+        .footer-logo svg path { fill: white !important; }
+        
+        .get-in-touch-box {
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 20px 30px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 300px;
+            margin-top: 40px;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .get-in-touch-box:hover { background: rgba(255,255,255,0.1); color: white; }
+        
+        .footer-motto { font-size: 42px; line-height: 1.2; font-weight: 500; color: var(--brand-dark); margin-bottom: 60px; }
+        .highlight-white { color: #ffffff; }
+
+        .footer-links-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left; }
+        .footer-link-col a { display: block; color: white; text-decoration: none; font-size: 13px; margin-bottom: 12px; font-weight: 500; opacity: 0.9; }
+        .footer-link-col a:hover { text-decoration: underline; opacity: 1; }
+
+        .footer-bottom {
+            max-width: 1600px; margin: 60px auto 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex; justify-content: space-between; color: white; font-size: 12px;
+        }
+        .bottom-links a { color: white; text-decoration: none; margin-right: 20px; }
+
+        .legend { background: #f9f9f9; padding: 20px; display:flex; gap:30px; justify-content:center; }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; }
+        
+        .crew-red { color: #d32f2f; font-weight: 700; }
+        .crew-yellow { color: #f9a825; font-weight: 700; }
+        .crew-green { color: #2e7d32; font-weight: 700; }
+        .crew-lightblue { color: #0288d1; font-weight: 700; }
+        .crew-lightviolet { color: #7b1fa2; font-weight: 700; }
+        .crew-lightorange { color: #ef6c00; font-weight: 700; }
+        .crew-grey { color: #616161; font-weight: 700; }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg acwa-navbar">
+        <div class="container-fluid">
+            <!-- Logo -->
+            <a class="navbar-brand" href="https://www.acwapower.com/en/">
+                <svg viewBox="0 0 65 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3.69666 76.3653L3.61597 73.6521C4.99916 72.5764 6.659 71.8952 8.79142 71.8952C12.8488 71.8952 14.1398 74.4649 14.1398 77.6561V87.6482H11.5463V85.7119L11.0276 86.8713C10.9123 87.1342 10.6587 87.3494 10.3936 87.4689C9.52912 87.8872 8.41104 87.9709 7.80013 87.9709C5.29886 87.9709 2.53247 86.3932 2.53247 83.441C2.53247 80.8713 4.63031 78.5525 8.86058 78.5525H11.5348C11.5117 75.0983 10.4743 74.2617 8.37646 74.2617C6.45152 74.2617 4.89543 74.9788 3.68513 76.3772L3.69666 76.3653ZM8.18051 85.6402C9.35622 85.6402 10.5665 85.3175 11.5463 84.7199V80.931H9.045C6.60136 80.931 5.25275 81.8274 5.25275 83.4051C5.25275 84.8394 6.3132 85.6402 8.18051 85.6402ZM17.1252 79.939C17.1252 75.0147 19.5688 71.8832 23.7414 71.8832C24.8941 71.8832 26.5885 72.1223 28.2599 73.198L28.2022 75.6721C26.7614 74.7756 25.2745 74.2976 24.0296 74.2976C21.3785 74.2976 19.8915 76.3294 19.8915 79.939C19.8915 83.5486 21.4131 85.4848 24.1794 85.4848C25.5857 85.4848 27.1648 84.947 28.548 83.9908L28.6057 86.5605C26.819 87.7199 24.9863 87.9948 23.7414 87.9948C19.5688 87.9948 17.1252 84.8633 17.1252 79.939ZM33.8618 87.6362L30.473 72.2537H33.1241L35.6023 84.7438H35.7176L38.6223 72.2537H42.0687L44.9734 84.7438H45.0887L47.5669 72.2537H50.218L46.8292 87.6362H43.4058L40.4435 75.8513H40.2706L37.3082 87.6362H33.8848H33.8618ZM52.5003 76.3653L52.4196 73.6521C53.8028 72.5764 55.4627 71.8952 57.5951 71.8952C61.6524 71.8952 62.9434 74.4649 62.9434 77.6561V87.6482H60.3499V85.7119L59.8312 86.8713C59.716 87.1342 59.4624 87.3494 59.1973 87.4689C58.3328 87.8872 57.2147 87.9709 56.6038 87.9709C54.1025 87.9709 51.3361 86.3932 51.3361 83.441C51.3361 80.8713 53.434 78.5525 57.6642 78.5525H60.3384C60.3154 75.0983 59.278 74.2617 57.1801 74.2617C55.2552 74.2617 53.6991 74.9788 52.4888 76.3772L52.5003 76.3653ZM56.9842 85.6402C58.1599 85.6402 59.3702 85.3175 60.3499 84.7199V80.931H57.8487C55.405 80.931 54.0564 81.8274 54.0564 83.4051C54.0564 84.8394 55.1169 85.6402 56.9842 85.6402Z"/>
+                    <path d="M12.0233 49.9211L36.3917 7.3999C37.9717 4.69273 40.2552 2.21894 41.7544 1.81053V1.49547H28.192C24.2479 1.49547 22.1259 2.84905 19.5195 7.3999L5.09216 32.6863C2.48578 37.2371 2.01294 39.4659 3.43146 43.1415L9.02479 57.3425H9.33617C9.02479 55.6622 10.4433 52.64 12.0117 49.9211H12.0233Z"/>
+                    <path d="M53.6666 49.9215C55.2466 52.6287 56.6651 55.6626 56.3422 57.3429H56.6536L62.3277 43.1419C63.8269 39.4662 63.0427 36.7591 60.667 32.6867L58.222 28.4625C55.6157 23.9117 53.4937 22.5581 49.5495 22.5581H35.9064V22.8732C37.4056 23.2699 39.6891 25.7437 41.2691 28.4625L53.6436 49.9215H53.6666Z"/>
+                    <path d="M56.9318 6.12801C56.5973 5.83629 56.3205 5.83629 55.9745 6.12801L51.0847 10.3288C50.5196 10.8072 50.2082 11.1689 49.943 11.6707H49.8738V7.08485C49.8738 6.44307 50.139 5.84795 50.6349 5.42788L54.3946 2.20728C55.8823 0.923707 57.0356 0.912038 58.5463 2.20728L62.306 5.42788C62.7903 5.84795 63.0671 6.4314 63.0671 7.08485V11.6707H62.9979C62.7327 11.1689 62.4213 10.8072 61.8562 10.3288L56.9664 6.13968L56.9318 6.12801Z"/>
+                </svg>
+            </a>
+            <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="https://www.acwapower.com/en/about-us/">Who we are</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.acwapower.com/en/projects/">What we do</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.acwapower.com/en/sustainability/">Sustainability</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.acwapower.com/en/investor-relations/overview/">Investors</a></li>
+                    
+                    <!-- NEW: Action Buttons -->
+                    <li class="nav-item nav-actions">
+                        <!-- SAP Button (Outline) -->
+                        <a href="https://hcm23.sapsf.com/sf/home?bplte_company=acwapowerc&_s.crb=%2fsJ5m8ulSRLE9NENHR2P9HG3gKZbebqftaXL8RcR%2fjI%3d" target="_blank" class="btn-sap">
+                            SuccessFactors
+                        </a>
+
+                        <!-- Planned Leaves Button (Replaces Contact Us) -->
+                        <a href="https://acwapi-my.sharepoint.com/:x:/g/personal/m_algarni_nomac_com/IQBX9-3015HcT6C0FTLuB_lOAfVqMX5BJTYTqFMVOwZ7nwE?e=dQHZWw" target="_blank" class="btn-leaves">
+                            <span>Planned Leaves</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+        <div class="hero-text">
+            <span class="highlight-white">Driving progress</span> for people <span class="highlight-white">and</span> the planet.
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container-main">
+        <div class="shift-nav">
+            <button class="shift-btn active" onclick="switchShift('A', event)">Shift A</button>
+            <button class="shift-btn" onclick="switchShift('B', event)">Shift B</button>
+            <button class="shift-btn" onclick="switchShift('C', event)">Shift C</button>
+            <button class="shift-btn" onclick="switchShift('D', event)">Shift D</button>
+        </div>
+
+        <div class="calendar-container" id="calendarContainer"></div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="dot" style="background:white; border:3px solid #9273DA"></div> Day Shift</div>
+            <div class="legend-item"><div class="dot" style="background:#2E2044;"></div> Night Shift</div>
+            <div class="legend-item"><div class="dot" style="background:#ddd;"></div> Off</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="brand-footer">
+        <div class="footer-content">
+            <!-- Left Side -->
+            <div class="footer-brand-col">
+                <div class="footer-logo">
+                    <svg viewBox="0 0 65 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.69666 76.3653L3.61597 73.6521C4.99916 72.5764 6.659 71.8952 8.79142 71.8952C12.8488 71.8952 14.1398 74.4649 14.1398 77.6561V87.6482H11.5463V85.7119L11.0276 86.8713C10.9123 87.1342 10.6587 87.3494 10.3936 87.4689C9.52912 87.8872 8.41104 87.9709 7.80013 87.9709C5.29886 87.9709 2.53247 86.3932 2.53247 83.441C2.53247 80.8713 4.63031 78.5525 8.86058 78.5525H11.5348C11.5117 75.0983 10.4743 74.2617 8.37646 74.2617C6.45152 74.2617 4.89543 74.9788 3.68513 76.3772L3.69666 76.3653ZM8.18051 85.6402C9.35622 85.6402 10.5665 85.3175 11.5463 84.7199V80.931H9.045C6.60136 80.931 5.25275 81.8274 5.25275 83.4051C5.25275 84.8394 6.3132 85.6402 8.18051 85.6402ZM17.1252 79.939C17.1252 75.0147 19.5688 71.8832 23.7414 71.8832C24.8941 71.8832 26.5885 72.1223 28.2599 73.198L28.2022 75.6721C26.7614 74.7756 25.2745 74.2976 24.0296 74.2976C21.3785 74.2976 19.8915 76.3294 19.8915 79.939C19.8915 83.5486 21.4131 85.4848 24.1794 85.4848C25.5857 85.4848 27.1648 84.947 28.548 83.9908L28.6057 86.5605C26.819 87.7199 24.9863 87.9948 23.7414 87.9948C19.5688 87.9948 17.1252 84.8633 17.1252 79.939ZM33.8618 87.6362L30.473 72.2537H33.1241L35.6023 84.7438H35.7176L38.6223 72.2537H42.0687L44.9734 84.7438H45.0887L47.5669 72.2537H50.218L46.8292 87.6362H43.4058L40.4435 75.8513H40.2706L37.3082 87.6362H33.8848H33.8618ZM52.5003 76.3653L52.4196 73.6521C53.8028 72.5764 55.4627 71.8952 57.5951 71.8952C61.6524 71.8952 62.9434 74.4649 62.9434 77.6561V87.6482H60.3499V85.7119L59.8312 86.8713C59.716 87.1342 59.4624 87.3494 59.1973 87.4689C58.3328 87.8872 57.2147 87.9709 56.6038 87.9709C54.1025 87.9709 51.3361 86.3932 51.3361 83.441C51.3361 80.8713 53.434 78.5525 57.6642 78.5525H60.3384C60.3154 75.0983 59.278 74.2617 57.1801 74.2617C55.2552 74.2617 53.6991 74.9788 52.4888 76.3772L52.5003 76.3653ZM56.9842 85.6402C58.1599 85.6402 59.3702 85.3175 60.3499 84.7199V80.931H57.8487C55.405 80.931 54.0564 81.8274 54.0564 83.4051C54.0564 84.8394 55.1169 85.6402 56.9842 85.6402Z"/>
+                        <path d="M12.0233 49.9211L36.3917 7.3999C37.9717 4.69273 40.2552 2.21894 41.7544 1.81053V1.49547H28.192C24.2479 1.49547 22.1259 2.84905 19.5195 7.3999L5.09216 32.6863C2.48578 37.2371 2.01294 39.4659 3.43146 43.1415L9.02479 57.3425H9.33617C9.02479 55.6622 10.4433 52.64 12.0117 49.9211H12.0233Z"/>
+                        <path d="M53.6666 49.9215C55.2466 52.6287 56.6651 55.6626 56.3422 57.3429H56.6536L62.3277 43.1419C63.8269 39.4662 63.0427 36.7591 60.667 32.6867L58.222 28.4625C55.6157 23.9117 53.4937 22.5581 49.5495 22.5581H35.9064V22.8732C37.4056 23.2699 39.6891 25.7437 41.2691 28.4625L53.6436 49.9215H53.6666Z"/>
+                        <path d="M56.9318 6.12801C56.5973 5.83629 56.3205 5.83629 55.9745 6.12801L51.0847 10.3288C50.5196 10.8072 50.2082 11.1689 49.943 11.6707H49.8738V7.08485C49.8738 6.44307 50.139 5.84795 50.6349 5.42788L54.3946 2.20728C55.8823 0.923707 57.0356 0.912038 58.5463 2.20728L62.306 5.42788C62.7903 5.84795 63.0671 6.4314 63.0671 7.08485V11.6707H62.9979C62.7327 11.1689 62.4213 10.8072 61.8562 10.3288L56.9664 6.13968L56.9318 6.12801Z"/>
+                    </svg>
+                </div>
+                <a href="https://www.acwapower.com/en/contact-us/" class="get-in-touch-box">
+                    <span>Get in touch</span>
+                    <span class="arrow-icon">→</span>
+                </a>
+            </div>
+
+            <!-- Right Side -->
+            <div class="footer-info-col">
+                <div class="footer-motto">
+                    <span class="highlight-white">Driving progress</span> for <br>people <span class="highlight-white">and</span> the planet.
+                </div>
+                
+                <div class="footer-links-grid">
+                    <div class="footer-link-col">
+                        <a href="https://www.acwapower.com/en/about-us/">About us</a>
+                        <a href="https://www.acwapower.com/en/about-us/company-history/">Our history</a>
+                        <a href="https://www.acwapower.com/en/about-us/board-of-directors/">Board of Directors</a>
+                        <a href="https://www.acwapower.com/en/about-us/management-team/">Management</a>
+                    </div>
+                    <div class="footer-link-col">
+                        <a href="https://www.acwapower.com/en/projects/">Projects</a>
+                        <a href="https://www.acwapower.com/en/projects/operations-maintenance/">Acwa Operations</a>
+                        <a href="#">Acwa Field Services</a>
+                        <a href="#">Technologies</a>
+                    </div>
+                    <div class="footer-link-col">
+                        <a href="https://www.acwapower.com/en/sustainability/">Sustainability at Acwa</a>
+                        <a href="https://www.acwapower.com/en/investor-relations/overview/">Investors overview</a>
+                        <a href="https://www.acwapower.com/en/newsroom/">Latest news</a>
+                        <a href="#">Applications</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>© 2026 Acwa. All rights reserved.</div>
+            <div class="bottom-links">
+                <a href="#">Legal Notice</a>
+                <a href="https://www.acwapower.com/en/privacy-policy/">Privacy Policy</a>
+                <a href="#">Compliance Line</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Crew Modal -->
+    <div class="modal" id="crewModal" style="display:none; position:fixed; inset:0; background:rgba(46, 32, 68, 0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+      <div style="background:white; width:min(720px, 92vw); max-height:80vh; overflow:auto; border-radius:12px; padding:25px; box-shadow:0 30px 60px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:15px;">
+          <div id="crewModalTitle" style="font-weight:700; font-size:1.3rem; color:var(--brand-dark);"></div>
+          <button id="crewModalClose" style="border:none; background:transparent; font-size:32px; cursor:pointer; line-height:1; color:#999;">&times;</button>
+        </div>
+        <div id="crewModalBody"></div>
+      </div>
+    </div>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.acwa-navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        const crewColorMap = {
+            'Syed Shahnawaz Ahmed': 'crew-red', 'Abdullah Alamri': 'crew-red', 'Abdullah Al Amri': 'crew-red', 'Kanaka Naga Srinivasu Kolli': 'crew-red',
+            'Mustafa Elansari': 'crew-red', 'Mustafa Ansari': 'crew-red', 'Mustafa Salem': 'crew-red',
+            'Saleh Mohammed Al amri': 'crew-yellow', 'Saleh Mohammed Al Amri': 'crew-yellow', 'Adam Mohammed Al-Huzum': 'crew-yellow', 'Sami Hamdan': 'crew-yellow',
+            'Shaheer Yousaf': 'crew-green', 'Ahmed Meshef': 'crew-green', 'Waleed Fayad': 'crew-green', 'Juma Khan': 'crew-green', 'Veera Prasad': 'crew-green', 'Veera Parasad': 'crew-green',
+            'Ahmed Fathy': 'crew-lightblue', 'Fawaz Al Qahtani': 'crew-lightblue', 'Rashed Alhajri': 'crew-lightblue', 'Prathapan': 'crew-lightblue',
+            'Yasser Althuiqeb': 'crew-lightblue', 'Abdullah Al Hajri': 'crew-lightblue', 'Norbie Cruz': 'crew-lightblue', 'Lard Parasad': 'crew-lightblue',
+            'Lakshmy Prasad': 'crew-lightblue', 'Saravanakumar Madhaiyan': 'crew-lightblue', 'Hassan Arshad': 'crew-lightblue',
+            'Purushothaman Devaraj': 'crew-lightviolet', 'Abdulwahab Al-Shehab': 'crew-lightviolet', 'Izhar Ali': 'crew-lightviolet', 'Mark Ramirez': 'crew-lightviolet',
+            'Ahmed Alsaqoor': 'crew-lightviolet', 'Ahmed Alsagoor': 'crew-lightviolet', 'Rajesh': 'crew-lightviolet', 'Rajesh Muniasamy': 'crew-lightviolet',
+            'Mohamed Al dossary': 'crew-lightorange', 'Mohamed Al Dossary': 'crew-lightorange', 'Abdullah Altulayhi': 'crew-lightorange', 'Bakr Abdulmajeed': 'crew-lightorange',
+            'Mohammed Mulhim': 'crew-lightorange', 'Abdullah Mohiddin Alshahrani': 'crew-lightorange', 'Mohammed Afnan': 'crew-lightorange', 'Abdelaziz Al Harbi': 'crew-lightorange',
+            'Amjad': 'crew-lightorange', 'Amjad Alruwaytie': 'crew-lightorange', 'Khalid Saleh Khalousi': 'crew-lightorange', 'Saad Al Enize': 'crew-lightorange',
+            'Mohammed Al Ghamdi': 'crew-lightorange', 'Bader AlSubait': 'crew-lightorange',
+            'Saad Salem Al Hajiri': 'crew-grey', 'Abdulhadi Mohammed Saleh': 'crew-grey', 'Abderahman al anezie': 'crew-grey', 'Abderahman Al Anezie': 'crew-grey',
+            'Abderahman al baqmi': 'crew-grey', 'Abderahman Al Baqmi': 'crew-grey', 'Ali al qahatani': 'crew-grey', 'Ali Alqahatani': 'crew-grey',
+            'Ali Al Qahtani': 'crew-grey', 'Faris al dawasri': 'crew-grey', 'Faris Aldawasri': 'crew-grey', 'Faris Al Dawasri': 'crew-grey',
+            'Mohamed al hakami': 'crew-grey', 'Mohamed Hakami': 'crew-grey', 'Mohamed Al Hakami': 'crew-grey', 'Saad al shahrani': 'crew-grey', 'Saad Alshahrani': 'crew-grey', 'Saad Al Shahrani': 'crew-grey'
+        };
+
+        function formatCrewName(name) {
+            name = name.trim();
+            const colorClass = crewColorMap[name];
+            return colorClass ? `<span class="${colorClass}">${name}</span>` : name;
+        }
+
+        const scheduleData = {
+            "1/1": {"A": "O", "B": "D", "C": "N", "D": "O"}, "1/2": {"A": "O", "B": "D", "C": "N", "D": "O"}, "1/3": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "1/4": {"A": "O", "B": "N", "C": "O", "D": "D"}, "1/5": {"A": "D", "B": "O", "C": "O", "D": "N"}, "1/6": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "1/7": {"A": "N", "B": "O", "C": "D", "D": "O"}, "1/8": {"A": "N", "B": "O", "C": "D", "D": "O"}, "1/9": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "1/10": {"A": "O", "B": "D", "C": "N", "D": "O"}, "1/11": {"A": "O", "B": "N", "C": "O", "D": "D"}, "1/12": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "1/13": {"A": "D", "B": "O", "C": "O", "D": "N"}, "1/14": {"A": "D", "B": "O", "C": "O", "D": "N"}, "1/15": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "1/16": {"A": "N", "B": "O", "C": "D", "D": "O"}, "1/17": {"A": "O", "B": "D", "C": "N", "D": "O"}, "1/18": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "1/19": {"A": "O", "B": "N", "C": "O", "D": "D"}, "1/20": {"A": "O", "B": "N", "C": "O", "D": "D"}, "1/21": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "1/22": {"A": "D", "B": "O", "C": "O", "D": "N"}, "1/23": {"A": "N", "B": "O", "C": "D", "D": "O"}, "1/24": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "1/25": {"A": "O", "B": "D", "C": "N", "D": "O"}, "1/26": {"A": "O", "B": "D", "C": "N", "D": "O"}, "1/27": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "1/28": {"A": "O", "B": "N", "C": "O", "D": "D"}, "1/29": {"A": "D", "B": "O", "C": "O", "D": "N"}, "1/30": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "1/31": {"A": "N", "B": "O", "C": "D", "D": "O"}, "2/1": {"A": "N", "B": "O", "C": "D", "D": "O"}, "2/2": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "2/3": {"A": "O", "B": "D", "C": "N", "D": "O"}, "2/4": {"A": "O", "B": "N", "C": "O", "D": "D"}, "2/5": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "2/6": {"A": "D", "B": "O", "C": "O", "D": "N"}, "2/7": {"A": "D", "B": "O", "C": "O", "D": "N"}, "2/8": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "2/9": {"A": "N", "B": "O", "C": "D", "D": "O"}, "2/10": {"A": "O", "B": "D", "C": "N", "D": "O"}, "2/11": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "2/12": {"A": "O", "B": "N", "C": "O", "D": "D"}, "2/13": {"A": "O", "B": "N", "C": "O", "D": "D"}, "2/14": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "2/15": {"A": "D", "B": "O", "C": "O", "D": "N"}, "2/16": {"A": "N", "B": "O", "C": "D", "D": "O"}, "2/17": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "2/18": {"A": "O", "B": "D", "C": "N", "D": "O"}, "2/19": {"A": "O", "B": "D", "C": "N", "D": "O"}, "2/20": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "2/21": {"A": "O", "B": "N", "C": "O", "D": "D"}, "2/22": {"A": "D", "B": "O", "C": "O", "D": "N"}, "2/23": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "2/24": {"A": "N", "B": "O", "C": "D", "D": "O"}, "2/25": {"A": "N", "B": "O", "C": "D", "D": "O"}, "2/26": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "2/27": {"A": "O", "B": "D", "C": "N", "D": "O"}, "2/28": {"A": "O", "B": "N", "C": "O", "D": "D"}, "3/1": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "3/2": {"A": "D", "B": "O", "C": "O", "D": "N"}, "3/3": {"A": "D", "B": "O", "C": "O", "D": "N"}, "3/4": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "3/5": {"A": "N", "B": "O", "C": "D", "D": "O"}, "3/6": {"A": "O", "B": "D", "C": "N", "D": "O"}, "3/7": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "3/8": {"A": "O", "B": "N", "C": "O", "D": "D"}, "3/9": {"A": "O", "B": "N", "C": "O", "D": "D"}, "3/10": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "3/11": {"A": "D", "B": "O", "C": "O", "D": "N"}, "3/12": {"A": "N", "B": "O", "C": "D", "D": "O"}, "3/13": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "3/14": {"A": "O", "B": "D", "C": "N", "D": "O"}, "3/15": {"A": "O", "B": "D", "C": "N", "D": "O"}, "3/16": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "3/17": {"A": "O", "B": "N", "C": "O", "D": "D"}, "3/18": {"A": "D", "B": "O", "C": "O", "D": "N"}, "3/19": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "3/20": {"A": "N", "B": "O", "C": "D", "D": "O"}, "3/21": {"A": "N", "B": "O", "C": "D", "D": "O"}, "3/22": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "3/23": {"A": "O", "B": "D", "C": "N", "D": "O"}, "3/24": {"A": "O", "B": "N", "C": "O", "D": "D"}, "3/25": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "3/26": {"A": "D", "B": "O", "C": "O", "D": "N"}, "3/27": {"A": "D", "B": "O", "C": "O", "D": "N"}, "3/28": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "3/29": {"A": "N", "B": "O", "C": "D", "D": "O"}, "3/30": {"A": "O", "B": "D", "C": "N", "D": "O"}, "3/31": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "4/1": {"A": "O", "B": "N", "C": "O", "D": "D"}, "4/2": {"A": "O", "B": "N", "C": "O", "D": "D"}, "4/3": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "4/4": {"A": "D", "B": "O", "C": "O", "D": "N"}, "4/5": {"A": "N", "B": "O", "C": "D", "D": "O"}, "4/6": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "4/7": {"A": "O", "B": "D", "C": "N", "D": "O"}, "4/8": {"A": "O", "B": "D", "C": "N", "D": "O"}, "4/9": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "4/10": {"A": "O", "B": "N", "C": "O", "D": "D"}, "4/11": {"A": "D", "B": "O", "C": "O", "D": "N"}, "4/12": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "4/13": {"A": "N", "B": "O", "C": "D", "D": "O"}, "4/14": {"A": "N", "B": "O", "C": "D", "D": "O"}, "4/15": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "4/16": {"A": "O", "B": "D", "C": "N", "D": "O"}, "4/17": {"A": "O", "B": "N", "C": "O", "D": "D"}, "4/18": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "4/19": {"A": "D", "B": "O", "C": "O", "D": "N"}, "4/20": {"A": "D", "B": "O", "C": "O", "D": "N"}, "4/21": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "4/22": {"A": "N", "B": "O", "C": "D", "D": "O"}, "4/23": {"A": "O", "B": "D", "C": "N", "D": "O"}, "4/24": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "4/25": {"A": "O", "B": "N", "C": "O", "D": "D"}, "4/26": {"A": "O", "B": "N", "C": "O", "D": "D"}, "4/27": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "4/28": {"A": "D", "B": "O", "C": "O", "D": "N"}, "4/29": {"A": "N", "B": "O", "C": "D", "D": "O"}, "4/30": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "5/1": {"A": "O", "B": "D", "C": "N", "D": "O"}, "5/2": {"A": "O", "B": "D", "C": "N", "D": "O"}, "5/3": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "5/4": {"A": "O", "B": "N", "C": "O", "D": "D"}, "5/5": {"A": "D", "B": "O", "C": "O", "D": "N"}, "5/6": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "5/7": {"A": "N", "B": "O", "C": "D", "D": "O"}, "5/8": {"A": "N", "B": "O", "C": "D", "D": "O"}, "5/9": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "5/10": {"A": "O", "B": "D", "C": "N", "D": "O"}, "5/11": {"A": "O", "B": "N", "C": "O", "D": "D"}, "5/12": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "5/13": {"A": "D", "B": "O", "C": "O", "D": "N"}, "5/14": {"A": "D", "B": "O", "C": "O", "D": "N"}, "5/15": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "5/16": {"A": "N", "B": "O", "C": "D", "D": "O"}, "5/17": {"A": "O", "B": "D", "C": "N", "D": "O"}, "5/18": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "5/19": {"A": "O", "B": "N", "C": "O", "D": "D"}, "5/20": {"A": "O", "B": "N", "C": "O", "D": "D"}, "5/21": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "5/22": {"A": "D", "B": "O", "C": "O", "D": "N"}, "5/23": {"A": "N", "B": "O", "C": "D", "D": "O"}, "5/24": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "5/25": {"A": "O", "B": "D", "C": "N", "D": "O"}, "5/26": {"A": "O", "B": "D", "C": "N", "D": "O"}, "5/27": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "5/28": {"A": "O", "B": "N", "C": "O", "D": "D"}, "5/29": {"A": "D", "B": "O", "C": "O", "D": "N"}, "5/30": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "5/31": {"A": "N", "B": "O", "C": "D", "D": "O"}, "6/1": {"A": "N", "B": "O", "C": "D", "D": "O"}, "6/2": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "6/3": {"A": "O", "B": "D", "C": "N", "D": "O"}, "6/4": {"A": "O", "B": "N", "C": "O", "D": "D"}, "6/5": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "6/6": {"A": "D", "B": "O", "C": "O", "D": "N"}, "6/7": {"A": "D", "B": "O", "C": "O", "D": "N"}, "6/8": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "6/9": {"A": "N", "B": "O", "C": "D", "D": "O"}, "6/10": {"A": "O", "B": "D", "C": "N", "D": "O"}, "6/11": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "6/12": {"A": "O", "B": "N", "C": "O", "D": "D"}, "6/13": {"A": "O", "B": "N", "C": "O", "D": "D"}, "6/14": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "6/15": {"A": "D", "B": "O", "C": "O", "D": "N"}, "6/16": {"A": "N", "B": "O", "C": "D", "D": "O"}, "6/17": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "6/18": {"A": "O", "B": "D", "C": "N", "D": "O"}, "6/19": {"A": "O", "B": "D", "C": "N", "D": "O"}, "6/20": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "6/21": {"A": "O", "B": "N", "C": "O", "D": "D"}, "6/22": {"A": "D", "B": "O", "C": "O", "D": "N"}, "6/23": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "6/24": {"A": "N", "B": "O", "C": "D", "D": "O"}, "6/25": {"A": "N", "B": "O", "C": "D", "D": "O"}, "6/26": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "6/27": {"A": "O", "B": "D", "C": "N", "D": "O"}, "6/28": {"A": "O", "B": "N", "C": "O", "D": "D"}, "6/29": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "6/30": {"A": "D", "B": "O", "C": "O", "D": "N"}, "7/1": {"A": "D", "B": "O", "C": "O", "D": "N"}, "7/2": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "7/3": {"A": "N", "B": "O", "C": "D", "D": "O"}, "7/4": {"A": "O", "B": "D", "C": "N", "D": "O"}, "7/5": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "7/6": {"A": "O", "B": "N", "C": "O", "D": "D"}, "7/7": {"A": "O", "B": "N", "C": "O", "D": "D"}, "7/8": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "7/9": {"A": "D", "B": "O", "C": "O", "D": "N"}, "7/10": {"A": "N", "B": "O", "C": "D", "D": "O"}, "7/11": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "7/12": {"A": "O", "B": "D", "C": "N", "D": "O"}, "7/13": {"A": "O", "B": "D", "C": "N", "D": "O"}, "7/14": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "7/15": {"A": "O", "B": "N", "C": "O", "D": "D"}, "7/16": {"A": "D", "B": "O", "C": "O", "D": "N"}, "7/17": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "7/18": {"A": "N", "B": "O", "C": "D", "D": "O"}, "7/19": {"A": "N", "B": "O", "C": "D", "D": "O"}, "7/20": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "7/21": {"A": "O", "B": "D", "C": "N", "D": "O"}, "7/22": {"A": "O", "B": "N", "C": "O", "D": "D"}, "7/23": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "7/24": {"A": "D", "B": "O", "C": "O", "D": "N"}, "7/25": {"A": "D", "B": "O", "C": "O", "D": "N"}, "7/26": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "7/27": {"A": "N", "B": "O", "C": "D", "D": "O"}, "7/28": {"A": "O", "B": "D", "C": "N", "D": "O"}, "7/29": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "7/30": {"A": "O", "B": "N", "C": "O", "D": "D"}, "7/31": {"A": "O", "B": "N", "C": "O", "D": "D"}, "8/1": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "8/2": {"A": "D", "B": "O", "C": "O", "D": "N"}, "8/3": {"A": "N", "B": "O", "C": "D", "D": "O"}, "8/4": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "8/5": {"A": "O", "B": "D", "C": "N", "D": "O"}, "8/6": {"A": "O", "B": "D", "C": "N", "D": "O"}, "8/7": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "8/8": {"A": "O", "B": "N", "C": "O", "D": "D"}, "8/9": {"A": "D", "B": "O", "C": "O", "D": "N"}, "8/10": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "8/11": {"A": "N", "B": "O", "C": "D", "D": "O"}, "8/12": {"A": "N", "B": "O", "C": "D", "D": "O"}, "8/13": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "8/14": {"A": "O", "B": "D", "C": "N", "D": "O"}, "8/15": {"A": "O", "B": "N", "C": "O", "D": "D"}, "8/16": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "8/17": {"A": "D", "B": "O", "C": "O", "D": "N"}, "8/18": {"A": "D", "B": "O", "C": "O", "D": "N"}, "8/19": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "8/20": {"A": "N", "B": "O", "C": "D", "D": "O"}, "8/21": {"A": "O", "B": "D", "C": "N", "D": "O"}, "8/22": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "8/23": {"A": "O", "B": "N", "C": "O", "D": "D"}, "8/24": {"A": "O", "B": "N", "C": "O", "D": "D"}, "8/25": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "8/26": {"A": "D", "B": "O", "C": "O", "D": "N"}, "8/27": {"A": "N", "B": "O", "C": "D", "D": "O"}, "8/28": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "8/29": {"A": "O", "B": "D", "C": "N", "D": "O"}, "8/30": {"A": "O", "B": "D", "C": "N", "D": "O"}, "8/31": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "9/1": {"A": "O", "B": "N", "C": "O", "D": "D"}, "9/2": {"A": "D", "B": "O", "C": "O", "D": "N"}, "9/3": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "9/4": {"A": "N", "B": "O", "C": "D", "D": "O"}, "9/5": {"A": "N", "B": "O", "C": "D", "D": "O"}, "9/6": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "9/7": {"A": "O", "B": "D", "C": "N", "D": "O"}, "9/8": {"A": "O", "B": "N", "C": "O", "D": "D"}, "9/9": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "9/10": {"A": "D", "B": "O", "C": "O", "D": "N"}, "9/11": {"A": "D", "B": "O", "C": "O", "D": "N"}, "9/12": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "9/13": {"A": "N", "B": "O", "C": "D", "D": "O"}, "9/14": {"A": "O", "B": "D", "C": "N", "D": "O"}, "9/15": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "9/16": {"A": "O", "B": "N", "C": "O", "D": "D"}, "9/17": {"A": "O", "B": "N", "C": "O", "D": "D"}, "9/18": {"A": "D", "B": "O", "C": "O", "D": "N"}, "9/19": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "9/20": {"A": "N", "B": "O", "C": "D", "D": "O"}, "9/21": {"A": "N", "B": "O", "C": "D", "D": "O"}, "9/22": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "9/23": {"A": "O", "B": "D", "C": "N", "D": "O"}, "9/24": {"A": "O", "B": "N", "C": "O", "D": "D"}, "9/25": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "9/26": {"A": "D", "B": "O", "C": "O", "D": "N"}, "9/27": {"A": "D", "B": "O", "C": "O", "D": "N"}, "9/28": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "9/29": {"A": "N", "B": "O", "C": "D", "D": "O"}, "9/30": {"A": "O", "B": "D", "C": "N", "D": "O"}, "10/1": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "10/2": {"A": "O", "B": "N", "C": "O", "D": "D"}, "10/3": {"A": "O", "B": "N", "C": "O", "D": "D"}, "10/4": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "10/5": {"A": "D", "B": "O", "C": "O", "D": "N"}, "10/6": {"A": "N", "B": "O", "C": "D", "D": "O"}, "10/7": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "10/8": {"A": "O", "B": "D", "C": "N", "D": "O"}, "10/9": {"A": "O", "B": "D", "C": "N", "D": "O"}, "10/10": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "10/11": {"A": "O", "B": "N", "C": "O", "D": "D"}, "10/12": {"A": "D", "B": "O", "C": "O", "D": "N"}, "10/13": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "10/14": {"A": "N", "B": "O", "C": "D", "D": "O"}, "10/15": {"A": "N", "B": "O", "C": "D", "D": "O"}, "10/16": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "10/17": {"A": "O", "B": "D", "C": "N", "D": "O"}, "10/18": {"A": "O", "B": "N", "C": "O", "D": "D"}, "10/19": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "10/20": {"A": "D", "B": "O", "C": "O", "D": "N"}, "10/21": {"A": "D", "B": "O", "C": "O", "D": "N"}, "10/22": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "10/23": {"A": "N", "B": "O", "C": "D", "D": "O"}, "10/24": {"A": "O", "B": "D", "C": "N", "D": "O"}, "10/25": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "10/26": {"A": "O", "B": "N", "C": "O", "D": "D"}, "10/27": {"A": "O", "B": "N", "C": "O", "D": "D"}, "10/28": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "10/29": {"A": "D", "B": "O", "C": "O", "D": "N"}, "10/30": {"A": "N", "B": "O", "C": "D", "D": "O"}, "10/31": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "11/1": {"A": "O", "B": "D", "C": "N", "D": "O"}, "11/2": {"A": "O", "B": "D", "C": "N", "D": "O"}, "11/3": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "11/4": {"A": "O", "B": "N", "C": "O", "D": "D"}, "11/5": {"A": "D", "B": "O", "C": "O", "D": "N"}, "11/6": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "11/7": {"A": "N", "B": "O", "C": "D", "D": "O"}, "11/8": {"A": "N", "B": "O", "C": "D", "D": "O"}, "11/9": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "11/10": {"A": "O", "B": "D", "C": "N", "D": "O"}, "11/11": {"A": "O", "B": "N", "C": "O", "D": "D"}, "11/12": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "11/13": {"A": "D", "B": "O", "C": "O", "D": "N"}, "11/14": {"A": "D", "B": "O", "C": "O", "D": "N"}, "11/15": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "11/16": {"A": "N", "B": "O", "C": "D", "D": "O"}, "11/17": {"A": "O", "B": "D", "C": "N", "D": "O"}, "11/18": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "11/19": {"A": "O", "B": "N", "C": "O", "D": "D"}, "11/20": {"A": "O", "B": "N", "C": "O", "D": "D"}, "11/21": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "11/22": {"A": "D", "B": "O", "C": "O", "D": "N"}, "11/23": {"A": "N", "B": "O", "C": "D", "D": "O"}, "11/24": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "11/25": {"A": "O", "B": "D", "C": "N", "D": "O"}, "11/26": {"A": "O", "B": "D", "C": "N", "D": "O"}, "11/27": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "11/28": {"A": "O", "B": "N", "C": "O", "D": "D"}, "11/29": {"A": "D", "B": "O", "C": "O", "D": "N"}, "11/30": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "12/1": {"A": "N", "B": "O", "C": "D", "D": "O"}, "12/2": {"A": "N", "B": "O", "C": "D", "D": "O"}, "12/3": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "12/4": {"A": "O", "B": "D", "C": "N", "D": "O"}, "12/5": {"A": "O", "B": "N", "C": "O", "D": "D"}, "12/6": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "12/7": {"A": "D", "B": "O", "C": "O", "D": "N"}, "12/8": {"A": "D", "B": "O", "C": "O", "D": "N"}, "12/9": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "12/10": {"A": "N", "B": "O", "C": "D", "D": "O"}, "12/11": {"A": "O", "B": "D", "C": "N", "D": "O"}, "12/12": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "12/13": {"A": "O", "B": "N", "C": "O", "D": "D"}, "12/14": {"A": "O", "B": "N", "C": "O", "D": "D"}, "12/15": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "12/16": {"A": "D", "B": "O", "C": "O", "D": "N"}, "12/17": {"A": "N", "B": "O", "C": "D", "D": "O"}, "12/18": {"A": "N", "B": "O", "C": "D", "D": "O"},
+            "12/19": {"A": "O", "B": "D", "C": "N", "D": "O"}, "12/20": {"A": "O", "B": "D", "C": "N", "D": "O"}, "12/21": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "12/22": {"A": "O", "B": "N", "C": "O", "D": "D"}, "12/23": {"A": "D", "B": "O", "C": "O", "D": "N"}, "12/24": {"A": "D", "B": "O", "C": "O", "D": "N"},
+            "12/25": {"A": "N", "B": "O", "C": "D", "D": "O"}, "12/26": {"A": "N", "B": "O", "C": "D", "D": "O"}, "12/27": {"A": "O", "B": "D", "C": "N", "D": "O"},
+            "12/28": {"A": "O", "B": "D", "C": "N", "D": "O"}, "12/29": {"A": "O", "B": "N", "C": "O", "D": "D"}, "12/30": {"A": "O", "B": "N", "C": "O", "D": "D"},
+            "12/31": {"A": "D", "B": "O", "C": "O", "D": "N"}
+        };
+
+        const crewByDate = {
+          defaults: {
+            A: {
+              D: { shiftInChargeEngineer: ["Syed Shahnawaz Ahmed"], supervisor: ["Shaheer Yousaf"], ccrOperators: ["Sami Hamdan","Fawaz Al Qahtani","Ahmed Fathy","Abdulwahab Al-Shehab","Adam Mohammed Al-Huzum"], localOperators: ["Purushothaman Devaraj","Mohamed Al Dossary","Abdullah Altulayhi","Bakr Abdulmajeed","Saad Salem Al Hajiri","Abdulhadi Mohammed Saleh"] },
+              N: { shiftInChargeEngineer: ["Syed Shahnawaz Ahmed"], supervisor: ["Shaheer Yousaf"], ccrOperators: ["Sami Hamdan","Fawaz Al Qahtani","Ahmed Fathy","Abdulwahab Al-Shehab","Adam Mohammed Al-Huzum"], localOperators: ["Purushothaman Devaraj","Mohamed Al Dossary","Abdullah Altulayhi","Bakr Abdulmajeed","Saad Salem Al Hajiri","Abdulhadi Mohammed Saleh"] }
+            },
+            B: {
+              D: { shiftInChargeEngineer: ["Abdullah Al Amri"], supervisor: ["Kanaka Naga Srinivasu Kolli"], ccrOperators: ["Prathapan","Ahmed Meshef","Rashed Alhajri","Saravanakumar Madhaiyan","Abdullah Mohiddin Alshahrani"], localOperators: ["Mohammed Mulhim","Mohammed Afnan","Abdelaziz Al Harbi","Amjad","Abderahman Al Anezie"] },
+              N: { shiftInChargeEngineer: ["Abdullah Al Amri"], supervisor: ["Kanaka Naga Srinivasu Kolli"], ccrOperators: ["Prathapan","Ahmed Meshef","Rashed Alhajri","Saravanakumar Madhaiyan","Abdullah Mohiddin Alshahrani"], localOperators: ["Mohammed Mulhim","Mohammed Afnan","Abdelaziz Al Harbi","Amjad","Abderahman Al Anezie"] }
+            },
+            C: {
+              D: { shiftInChargeEngineer: ["Mustafa Ansari"], supervisor: ["Juma Khan"], ccrOperators: ["Abdullah Al Hajri","Yasser Althuiqeb","Waleed Fayad","Norbie Cruz"], localOperators: ["Khalid Saleh Khalousi","Saad Al Enize","Izhar Ali","Abderahman Al Baqmi","Ali Al Qahtani"] },
+              N: { shiftInChargeEngineer: ["Mustafa Ansari"], supervisor: ["Juma Khan"], ccrOperators: ["Abdullah Al Hajri","Yasser Althuiqeb","Waleed Fayad","Norbie Cruz"], localOperators: ["Khalid Saleh Khalousi","Saad Al Enize","Izhar Ali","Abderahman Al Baqmi","Ali Al Qahtani"] }
+            },
+            D: {
+              D: { shiftInChargeEngineer: ["Mustafa Salem"], supervisor: ["Veera Prasad"], ccrOperators: ["Lakshmy Prasad","Saleh Mohammed Al Amri","Hassan Arshad","Ahmed Alsagoor"], localOperators: ["Rajesh","Mark Ramirez","Mohammed Al Ghamdi","Bader AlSubait","Faris Al Dawasri","Mohamed Al Hakami","Saad Al Shahrani"] },
+              N: { shiftInChargeEngineer: ["Mustafa Salem"], supervisor: ["Veera Prasad"], ccrOperators: ["Lakshmy Prasad","Saleh Mohammed Al Amri","Hassan Arshad","Ahmed Alsagoor"], localOperators: ["Rajesh","Mark Ramirez","Mohammed Al Ghamdi","Bader AlSubait","Faris Al Dawasri","Mohamed Al Hakami","Saad Al Shahrani"] }
+            }
+          }
+        };
+
+        function getDayClass(date, shift) {
+            const key = `${date.getMonth() + 1}/${date.getDate()}`;
+            const data = scheduleData[key];
+            if (!data) return "empty";
+            const type = data[shift];
+            if (type === "D") return "day-shift";
+            if (type === "N") return "night-shift";
+            if (type === "O") return "off-shift";
+            return "empty";
+        }
+
+        function getShiftLabel(date, shift) {
+            const key = `${date.getMonth() + 1}/${date.getDate()}`;
+            const data = scheduleData[key];
+            if (!data) return "";
+            const type = data[shift];
+            if (type === "D") return "day";
+            if (type === "N") return "night";
+            if (type === "O") return "off";
+            return "";
+        }
+
+        function openCrewModal() {
+          document.getElementById('crewModal').style.display = 'flex';
+        }
+
+        function closeCrewModal() {
+          document.getElementById('crewModal').style.display = 'none';
+        }
+
+        function renderCrewList(crew) {
+          const sections = [
+            ["Shift In Charge Engineer", crew.shiftInChargeEngineer || []],
+            ["Supervisor", crew.supervisor || []],
+            ["CCR Operators", crew.ccrOperators || []],
+            ["Local Operators", crew.localOperators || []]
+          ];
+
+          let html = "";
+          sections.forEach(([title, names]) => {
+            html += `<div style="margin:10px 0 6px; font-weight:700; color:var(--brand-dark); text-transform:uppercase; font-size:0.8rem; letter-spacing:0.5px;">${title}</div>`;
+            if (!names.length) html += `<div style="color:#999; font-style:italic; margin-bottom:12px;">No names set</div>`;
+            else html += `<ul style="margin-left:18px; margin-bottom:12px; list-style-type:disc; color:#555;">${names.map(n => `<li>${formatCrewName(n)}</li>`).join("")}</ul>`;
+          });
+          return html;
+        }
+
+        function showCrewForDay(dateObj, shiftGroup) {
+          const key = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+          const dayType = scheduleData[key]?.[shiftGroup];
+
+          document.getElementById('crewModalTitle').textContent =
+            `Shift ${shiftGroup} - ${key}/2026 (${dayType === "D" ? "Day" : dayType === "N" ? "Night" : "Off"})`;
+
+          if (!dayType || dayType === "O") {
+            document.getElementById('crewModalBody').innerHTML =
+              `<div style="color:#666; padding:20px 0;">Off day (no crew on duty).</div>`;
+            openCrewModal();
+            return;
+          }
+
+          const crew = crewByDate[key]?.[shiftGroup]?.[dayType] || crewByDate.defaults?.[shiftGroup]?.[dayType] || {};
+          document.getElementById('crewModalBody').innerHTML = renderCrewList(crew);
+          openCrewModal();
+        }
+
+        function buildCalendar(shift) {
+            const container = document.getElementById('calendarContainer');
+            container.innerHTML = '';
+
+            for (let month = 0; month < 12; month++) {
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                
+                const monthSection = document.createElement('div');
+                monthSection.className = 'month-section mb-5';
+                
+                const title = document.createElement('div');
+                title.className = 'month-title';
+                title.textContent = `${monthNames[month]} 2026`;
+                monthSection.appendChild(title);
+                
+                const grid = document.createElement('div');
+                grid.className = 'calendar-grid';
+                
+                dayNames.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'day-header';
+                    dayHeader.textContent = day;
+                    grid.appendChild(dayHeader);
+                });
+                
+                const firstDay = new Date(2026, month, 1).getDay();
+                const daysInMonth = new Date(2026, month + 1, 0).getDate();
+                
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day empty';
+                    grid.appendChild(emptyDay);
+                }
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(2026, month, day);
+                    const dayClass = getDayClass(date, shift);
+                    const label = getShiftLabel(date, shift);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = `calendar-day ${dayClass}`;
+                    dayElement.innerHTML = `<div class="date">${day}</div><div class="shift">${label}</div>`;
+
+                    dayElement.addEventListener('click', () => showCrewForDay(date, shift));
+
+                    grid.appendChild(dayElement);
+                }
+                
+                monthSection.appendChild(grid);
+                container.appendChild(monthSection);
+            }
+        }
+
+        function switchShift(shift, event) {
+            const buttons = document.querySelectorAll('.shift-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            buildCalendar(shift);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const container = document.getElementById('calendarContainer');
+          if (container) buildCalendar('A');
+
+          const closeBtn = document.getElementById('crewModalClose');
+          const modal = document.getElementById('crewModal');
+          
+          if (closeBtn) closeBtn.addEventListener('click', closeCrewModal);
+          if (modal) {
+            modal.addEventListener('click', (e) => {
+              if (e.target.id === 'crewModal') closeCrewModal();
+            });
+          }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+</body>
+</html>
