@@ -12,20 +12,17 @@
         .sap-card-top { height: 6px; width: 100%; }
         .badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 999px; }
         
-        /* Applied on SAP = Fixed, Planned = Estimated */
         .badge-sap { background-color: #e8def8; color: #4a148c; }
         .badge-planned { background-color: #e0f2fe; color: #0288d1; border: 1px dashed #0288d1; }
         .badge-conflict { background-color: #fee2e2; color: #b91c1c; }
         
-        /* Timeline styling */
         .timeline-grid { display: grid; grid-template-columns: 220px 1fr; border: 1px solid #e5e7eb; background: white; }
         .timeline-header { background: #f9fafb; font-weight: 600; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
         .timeline-row { display: contents; }
         .timeline-name { padding: 0.5rem; border-bottom: 1px solid #f3f4f6; border-right: 1px solid #e5e7eb; font-size: 0.875rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-        .timeline-track { position: relative; border-bottom: 1px solid #f3f4f6; height: 100%; min-height: 40px; }
+        .timeline-track { position: relative; border-bottom: 1px solid #f3f4f6; height: 100%; min-height: 48px; }
         .timeline-line { position: absolute; height: 4px; top: 50%; transform: translateY(-50%); border-radius: 2px; }
         
-        /* Line styles based on type */
         .timeline-line.sap { background-color: #4a148c; }
         .timeline-line.planned { border-top: 2px dashed #0288d1; background: transparent; height: 0; }
         
@@ -58,12 +55,10 @@
             <span style="color: #616161">● Grey</span>
         </div>
 
-        <div id="card-view" class="space-y-8">
-            </div>
+        <div id="card-view" class="space-y-8"></div>
 
         <div id="timeline-view" class="hidden overflow-x-auto pb-8">
-            <div class="timeline-grid min-w-[1200px]" id="timeline-container">
-                </div>
+            <div class="timeline-grid min-w-[1200px]" id="timeline-container"></div>
         </div>
     </div>
 
@@ -101,23 +96,30 @@
                         <option value="crew-grey">Grey</option>
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                        <input type="date" id="edit-start" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+
+                <div class="border-t pt-4">
+                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Add New Leave Period</p>
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" id="edit-start" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" id="edit-end" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">End Date</label>
-                        <input type="date" id="edit-end" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                        <label class="block text-sm font-medium text-gray-700">Leave Type</label>
+                        <select id="edit-type" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                            <option value="Applied on SAP">Applied on SAP</option>
+                            <option value="Planned">Planned</option>
+                        </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Leave Type</label>
-                    <select id="edit-type" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
-                        <option value="Applied on SAP">Applied on SAP</option>
-                        <option value="Planned">Planned</option>
-                    </select>
-                </div>
+
+                <div id="existing-leaves-list" class="space-y-2 mt-4 max-h-32 overflow-y-auto">
+                    </div>
             </div>
             
             <div class="mt-6 flex justify-end space-x-3">
@@ -128,99 +130,76 @@
     </dialog>
 
     <script>
-        // --- CONFIGURATION & SECURITY ---
         let editUnlocked = false;
-        let viewMode = 'card'; // 'card' or 'timeline'
+        let viewMode = 'card';
         
         const crewColorMap = {
-            "crew-red": "#d32f2f",
-            "crew-yellow": "#f9a825",
-            "crew-green": "#2e7d32",
-            "crew-lightblue": "#0288d1",
-            "crew-lightviolet": "#7b1fa2",
-            "crew-lightorange": "#ef6c00",
-            "crew-grey": "#616161"
+            "crew-red": "#d32f2f", "crew-yellow": "#f9a825", "crew-green": "#2e7d32",
+            "crew-lightblue": "#0288d1", "crew-lightviolet": "#7b1fa2",
+            "crew-lightorange": "#ef6c00", "crew-grey": "#616161"
         };
 
         function requirePin(callback) {
-            if (editUnlocked) { 
-                callback(); 
-                return; 
-            }
-            const pin = prompt("Enter PIN to unlock editing (Session active until refresh):");
-            if (pin === "2525") {
-                editUnlocked = true;
-                callback();
-            } else if (pin !== null) {
-                alert("Incorrect PIN.");
-            }
+            if (editUnlocked) { callback(); return; }
+            const pin = prompt("Enter PIN to unlock editing:");
+            if (pin === "2525") { editUnlocked = true; callback(); }
+            else if (pin !== null) { alert("Incorrect PIN."); }
         }
 
-        // --- FULL ROSTER DATASET (50 People) ---
         let roster = [
-            // 14 FIXED (Applied on SAP)
-            { id: 1, name: "Izhar Ali", crew: "C", role: "Local Operator", color: "crew-lightviolet", start: "2026-04-21", end: "2026-05-02", type: "Applied on SAP" },
-            { id: 2, name: "Purushothaman", crew: "A", role: "Local Operator", color: "crew-lightviolet", start: "2026-04-27", end: "2026-05-07", type: "Applied on SAP" },
-            { id: 3, name: "Juma Khan", crew: "General", role: "Operator", color: "crew-green", start: "2026-04-29", end: "2026-05-14", type: "Applied on SAP" },
-            { id: 4, name: "Mustafa Salem", crew: "D", role: "SiCE", color: "crew-red", start: "2026-05-19", end: "2026-06-19", type: "Applied on SAP" },
-            { id: 5, name: "Ahmed Alsaqoor", crew: "D", role: "CCR Operator", color: "crew-lightviolet", start: "2026-05-19", end: "2026-06-11", type: "Applied on SAP" },
-            { id: 6, name: "Syed Shahnawaz Ahmed", crew: "A", role: "Supervisor", color: "crew-red", start: "2026-05-20", end: "2026-06-04", type: "Applied on SAP" },
-            { id: 7, name: "Abdul Hameed", crew: "General", role: "Operator", color: "crew-grey", start: "2026-05-20", end: "2026-06-10", type: "Applied on SAP" },
-            { id: 8, name: "Waleed Fayad", crew: "C", role: "CCR Operator", color: "crew-green", start: "2026-05-31", end: "2026-06-23", type: "Applied on SAP" },
-            { id: 9, name: "Mark Ramirez", crew: "D", role: "Local Operator", color: "crew-lightviolet", start: "2026-05-31", end: "2026-06-15", type: "Applied on SAP" },
-            { id: 10, name: "Ahmed Fathy", crew: "A", role: "CCR Operator", color: "crew-lightblue", start: "2026-06-06", end: "2026-06-14", type: "Applied on SAP" },
-            { id: 11, name: "Moustafa Elansari", crew: "C", role: "Supervisor", color: "crew-red", start: "2026-06-16", end: "2026-06-28", type: "Applied on SAP" },
-            { id: 12, name: "Veera Prasad", crew: "D", role: "Supervisor", color: "crew-green", start: "2026-07-06", end: "2026-08-06", type: "Applied on SAP" },
-            { id: 13, name: "Lakshmy Prasad", crew: "D", role: "CCR Operator", color: "crew-lightblue", start: "2026-07-14", end: "2026-08-10", type: "Applied on SAP" },
-            { id: 14, name: "Prathapan", crew: "B", role: "CCR Operator", color: "crew-lightblue", start: "2026-07-22", end: "2026-08-18", type: "Applied on SAP" },
-            
-            // CREW A - Planned Estimates
-            { id: 15, name: "Zaid Almarri", crew: "A", role: "SiCE", color: "crew-red", start: "2026-08-01", end: "2026-08-15", type: "Planned" },
-            { id: 16, name: "Sami Hamdan", crew: "A", role: "CCR Operator", color: "crew-yellow", start: "2026-09-01", end: "2026-09-15", type: "Planned" },
-            { id: 17, name: "Fawaz Al Qahtani", crew: "A", role: "CCR Operator", color: "crew-lightblue", start: "2026-09-16", end: "2026-09-30", type: "Planned" },
-            { id: 18, name: "Abdulwahab Al-Shehab", crew: "A", role: "CCR Operator", color: "crew-lightviolet", start: "2026-10-01", end: "2026-10-15", type: "Planned" },
-            { id: 19, name: "Shaheer Yousaf", crew: "A", role: "CCR Operator", color: "crew-green", start: "2026-10-16", end: "2026-10-30", type: "Planned" },
-            { id: 20, name: "Mohamed Al Dossary", crew: "A", role: "Local Operator", color: "crew-lightorange", start: "2026-11-01", end: "2026-11-15", type: "Planned" },
-            { id: 21, name: "Abdullah Altulayhi", crew: "A", role: "Local Operator", color: "crew-lightorange", start: "2026-11-16", end: "2026-11-30", type: "Planned" },
-            { id: 22, name: "Bakr Abdulmajeed", crew: "A", role: "Local Operator", color: "crew-lightorange", start: "2026-12-01", end: "2026-12-15", type: "Planned" },
-            { id: 23, name: "Saad Salem Al Hajiri", crew: "A", role: "Local Operator", color: "crew-grey", start: "2026-08-16", end: "2026-08-30", type: "Planned" },
-            { id: 24, name: "Abdulhadi Mohammed Saleh", crew: "A", role: "Local Operator", color: "crew-lightorange", start: "2026-09-01", end: "2026-09-15", type: "Planned" },
-
-            // CREW B - Planned Estimates
-            { id: 25, name: "Abdullah Al Amri", crew: "B", role: "SiCE", color: "crew-red", start: "2026-08-01", end: "2026-08-15", type: "Planned" },
-            { id: 26, name: "Kanaka Naga Srinivasu Kolli", crew: "B", role: "Supervisor", color: "crew-red", start: "2026-09-01", end: "2026-09-15", type: "Planned" },
-            { id: 27, name: "Ahmed Fawaz", crew: "B", role: "CCR Operator", color: "crew-lightblue", start: "2026-10-01", end: "2026-10-15", type: "Planned" },
-            { id: 28, name: "Rashed Alhajri", crew: "B", role: "CCR Operator", color: "crew-lightblue", start: "2026-10-16", end: "2026-10-30", type: "Planned" },
-            { id: 29, name: "Saravanakumar Madhaiyan", crew: "B", role: "CCR Operator", color: "crew-lightblue", start: "2026-11-01", end: "2026-11-15", type: "Planned" },
-            { id: 30, name: "Abdullah Mohiddin Alshahrani", crew: "B", role: "CCR Operator", color: "crew-lightblue", start: "2026-11-16", end: "2026-11-30", type: "Planned" },
-            { id: 31, name: "Mohammed Mulhim", crew: "B", role: "Local Operator", color: "crew-lightorange", start: "2026-12-01", end: "2026-12-15", type: "Planned" },
-            { id: 32, name: "Mohammed Afnan", crew: "B", role: "Local Operator", color: "crew-lightorange", start: "2026-08-16", end: "2026-08-30", type: "Planned" },
-            { id: 33, name: "Abdelaziz Al Harbi", crew: "B", role: "Local Operator", color: "crew-lightorange", start: "2026-09-01", end: "2026-09-15", type: "Planned" },
-            { id: 34, name: "Amjad Alruwaytie", crew: "B", role: "Local Operator", color: "crew-lightorange", start: "2026-09-16", end: "2026-09-30", type: "Planned" },
-            { id: 35, name: "Abderahman Al Anezie", crew: "B", role: "Local Operator", color: "crew-lightorange", start: "2026-10-01", end: "2026-10-15", type: "Planned" },
-
-            // CREW C - Planned Estimates
-            { id: 36, name: "Alaa Alrefae", crew: "C", role: "SiCE", color: "crew-red", start: "2026-08-01", end: "2026-08-15", type: "Planned" },
-            { id: 37, name: "Abdullah Al Hajri", crew: "C", role: "CCR Operator", color: "crew-lightblue", start: "2026-09-01", end: "2026-09-15", type: "Planned" },
-            { id: 38, name: "Yasser Althuiqeb", crew: "C", role: "CCR Operator", color: "crew-lightblue", start: "2026-09-16", end: "2026-09-30", type: "Planned" },
-            { id: 39, name: "Norbie Cruz", crew: "C", role: "CCR Operator", color: "crew-lightblue", start: "2026-10-01", end: "2026-10-15", type: "Planned" },
-            { id: 40, name: "Khalid Saleh Khalousi", crew: "C", role: "Local Operator", color: "crew-lightorange", start: "2026-10-16", end: "2026-10-30", type: "Planned" },
-            { id: 41, name: "Saad Al Enize", crew: "C", role: "Local Operator", color: "crew-lightorange", start: "2026-11-01", end: "2026-11-15", type: "Planned" },
-            { id: 42, name: "Abderahman Al Baqmi", crew: "C", role: "Local Operator", color: "crew-lightorange", start: "2026-11-16", end: "2026-11-30", type: "Planned" },
-            { id: 43, name: "Ali Al Qahtani", crew: "C", role: "Local Operator", color: "crew-grey", start: "2026-12-01", end: "2026-12-15", type: "Planned" },
-
-            // CREW D - Planned Estimates
-            { id: 44, name: "Saleh Mohammed Al Amri", crew: "D", role: "CCR Operator", color: "crew-yellow", start: "2026-08-01", end: "2026-08-15", type: "Planned" },
-            { id: 45, name: "Hassan Arshad", crew: "D", role: "CCR Operator", color: "crew-lightblue", start: "2026-09-01", end: "2026-09-15", type: "Planned" },
-            { id: 46, name: "Rajesh Muniasamy", crew: "D", role: "Local Operator", color: "crew-grey", start: "2026-09-16", end: "2026-09-30", type: "Planned" },
-            { id: 47, name: "Mohammed Al Ghamdi", crew: "D", role: "Local Operator", color: "crew-grey", start: "2026-10-01", end: "2026-10-15", type: "Planned" },
-            { id: 48, name: "Bader AlSubait", crew: "D", role: "Local Operator", color: "crew-grey", start: "2026-10-16", end: "2026-10-30", type: "Planned" },
-            { id: 49, name: "Faris Al Dawasri", crew: "D", role: "Local Operator", color: "crew-grey", start: "2026-11-01", end: "2026-11-15", type: "Planned" },
-            { id: 50, name: "Mohamed Al Hakami", crew: "D", role: "Local Operator", color: "crew-grey", start: "2026-11-16", end: "2026-11-30", type: "Planned" },
-            { id: 51, name: "Saad Al Shahrani", crew: "D", role: "Local Operator", color: "crew-grey", start: "2026-12-01", end: "2026-12-15", type: "Planned" }
+            { id: 1, name: "Izhar Ali", crew: "C", role: "Local Operator", color: "crew-lightviolet", leaves: [{ start: "2026-04-21", end: "2026-05-02", type: "Applied on SAP" }] },
+            { id: 2, name: "Purushothaman", crew: "A", role: "Local Operator", color: "crew-lightviolet", leaves: [{ start: "2026-04-27", end: "2026-05-07", type: "Applied on SAP" }] },
+            { id: 3, name: "Juma Khan", crew: "General", role: "Operator", color: "crew-green", leaves: [{ start: "2026-04-29", end: "2026-05-14", type: "Applied on SAP" }] },
+            { id: 4, name: "Mustafa Salem", crew: "D", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-05-19", end: "2026-06-19", type: "Applied on SAP" }] },
+            { id: 5, name: "Ahmed Alsaqoor", crew: "D", role: "CCR Operator", color: "crew-lightviolet", leaves: [{ start: "2026-05-19", end: "2026-06-11", type: "Applied on SAP" }] },
+            { id: 6, name: "Syed Shahnawaz Ahmed", crew: "A", role: "Supervisor", color: "crew-red", leaves: [{ start: "2026-05-20", end: "2026-06-04", type: "Applied on SAP" }] },
+            { id: 7, name: "Abdul Hameed", crew: "General", role: "Operator", color: "crew-grey", leaves: [{ start: "2026-05-20", end: "2026-06-10", type: "Applied on SAP" }] },
+            { id: 8, name: "Waleed Fayad", crew: "C", role: "CCR Operator", color: "crew-green", leaves: [{ start: "2026-05-31", end: "2026-06-23", type: "Applied on SAP" }] },
+            { id: 9, name: "Mark Ramirez", crew: "D", role: "Local Operator", color: "crew-lightviolet", leaves: [{ start: "2026-05-31", end: "2026-06-15", type: "Applied on SAP" }] },
+            { id: 10, name: "Ahmed Fathy", crew: "A", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-06-06", end: "2026-06-14", type: "Applied on SAP" }] },
+            { id: 11, name: "Moustafa Elansari", crew: "C", role: "Supervisor", color: "crew-red", leaves: [{ start: "2026-06-16", end: "2026-06-28", type: "Applied on SAP" }] },
+            { id: 12, name: "Veera Prasad", crew: "D", role: "Supervisor", color: "crew-green", leaves: [{ start: "2026-07-06", end: "2026-08-06", type: "Applied on SAP" }] },
+            { id: 13, name: "Lakshmy Prasad", crew: "D", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-07-14", end: "2026-08-10", type: "Applied on SAP" }] },
+            { id: 14, name: "Prathapan", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-07-22", end: "2026-08-18", type: "Applied on SAP" }] },
+            { id: 15, name: "Zaid Almarri", crew: "A", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
+            { id: 16, name: "Sami Hamdan", crew: "A", role: "CCR Operator", color: "crew-yellow", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
+            { id: 17, name: "Fawaz Al Qahtani", crew: "A", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
+            { id: 18, name: "Abdulwahab Al-Shehab", crew: "A", role: "CCR Operator", color: "crew-lightviolet", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
+            { id: 19, name: "Shaheer Yousaf", crew: "A", role: "CCR Operator", color: "crew-green", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
+            { id: 20, name: "Mohamed Al Dossary", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
+            { id: 21, name: "Abdullah Altulayhi", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
+            { id: 22, name: "Bakr Abdulmajeed", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
+            { id: 23, name: "Saad Salem Al Hajiri", crew: "A", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-08-16", end: "2026-08-30", type: "Planned" }] },
+            { id: 24, name: "Abdulhadi Mohammed Saleh", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
+            { id: 25, name: "Abdullah Al Amri", crew: "B", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
+            { id: 26, name: "Kanaka Naga Srinivasu Kolli", crew: "B", role: "Supervisor", color: "crew-red", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
+            { id: 27, name: "Ahmed Fawaz", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
+            { id: 28, name: "Rashed Alhajri", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
+            { id: 29, name: "Saravanakumar Madhaiyan", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
+            { id: 30, name: "Abdullah Mohiddin Alshahrani", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
+            { id: 31, name: "Mohammed Mulhim", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
+            { id: 32, name: "Mohammed Afnan", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-08-16", end: "2026-08-30", type: "Planned" }] },
+            { id: 33, name: "Abdelaziz Al Harbi", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
+            { id: 34, name: "Amjad Alruwaytie", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
+            { id: 35, name: "Abderahman Al Anezie", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
+            { id: 36, name: "Alaa Alrefae", crew: "C", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
+            { id: 37, name: "Abdullah Al Hajri", crew: "C", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
+            { id: 38, name: "Yasser Althuiqeb", crew: "C", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
+            { id: 39, name: "Norbie Cruz", crew: "C", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
+            { id: 40, name: "Khalid Saleh Khalousi", crew: "C", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
+            { id: 41, name: "Saad Al Enize", crew: "C", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
+            { id: 42, name: "Abderahman Al Baqmi", crew: "C", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
+            { id: 43, name: "Ali Al Qahtani", crew: "C", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
+            { id: 44, name: "Saleh Mohammed Al Amri", crew: "D", role: "CCR Operator", color: "crew-yellow", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
+            { id: 45, name: "Hassan Arshad", crew: "D", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
+            { id: 46, name: "Rajesh Muniasamy", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
+            { id: 47, name: "Mohammed Al Ghamdi", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
+            { id: 48, name: "Bader AlSubait", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
+            { id: 49, name: "Faris Al Dawasri", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
+            { id: 50, name: "Mohamed Al Hakami", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
+            { id: 51, name: "Saad Al Shahrani", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] }
         ];
 
-        // --- LOGIC & RENDERING ---
         function calculateConflicts() {
             roster.forEach(p => p.conflict = false);
             let conflictCount = 0;
@@ -230,26 +209,20 @@
                     const p1 = roster[i];
                     const p2 = roster[j];
                     if (p1.crew === p2.crew && p1.role === p2.role) {
-                        const start1 = new Date(p1.start);
-                        const end1 = new Date(p1.end);
-                        const start2 = new Date(p2.start);
-                        const end2 = new Date(p2.end);
-                        
-                        if (start1 <= end2 && start2 <= end1) {
-                            p1.conflict = true;
-                            p2.conflict = true;
-                        }
+                        p1.leaves.forEach(l1 => {
+                            p2.leaves.forEach(l2 => {
+                                const s1 = new Date(l1.start), e1 = new Date(l1.end);
+                                const s2 = new Date(l2.start), e2 = new Date(l2.end);
+                                if (s1 <= e2 && s2 <= e1) { p1.conflict = true; p2.conflict = true; }
+                            });
+                        });
                     }
                 }
                 if (roster[i].conflict) conflictCount++;
             }
 
             const banner = document.getElementById('conflict-banner');
-            if (conflictCount > 0) {
-                banner.innerHTML = `<span class="text-red-600 font-bold">⚠️ ${conflictCount} schedule conflicts detected within same Crew & Role.</span>`;
-            } else {
-                banner.innerHTML = `<span class="text-green-600 font-bold">✓ No conflicts detected.</span>`;
-            }
+            banner.innerHTML = conflictCount > 0 ? `<span class="text-red-600 font-bold">⚠️ ${conflictCount} schedule conflicts detected.</span>` : `<span class="text-green-600 font-bold">✓ No conflicts detected.</span>`;
         }
 
         function renderAll() {
@@ -271,7 +244,6 @@
         function renderCards() {
             const container = document.getElementById('card-view');
             container.innerHTML = '';
-            
             const crews = ['A', 'B', 'C', 'D', 'General'];
             
             crews.forEach(crew => {
@@ -285,9 +257,22 @@
 
                 crewMembers.forEach(person => {
                     const hexColor = crewColorMap[person.color] || '#000';
-                    const badgeClass = person.type === 'Applied on SAP' ? 'badge-sap' : 'badge-planned';
                     const conflictHtml = person.conflict ? `<span class="badge badge-conflict absolute top-2 right-2">⚠️ Conflict</span>` : '';
                     
+                    const leavesHtml = person.leaves.map((l, idx) => `
+                        <div class="bg-gray-50 rounded p-2 text-xs mb-2 border border-gray-100">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="badge ${l.type === 'Applied on SAP' ? 'badge-sap' : 'badge-planned'}">${l.type}</span>
+                                <span class="text-[10px] text-gray-400 font-mono">${Math.ceil((new Date(l.end)-new Date(l.start))/(1000*60*60*24))}d</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">${l.start}</span>
+                                <span class="text-gray-400">→</span>
+                                <span class="font-semibold text-gray-800">${l.end}</span>
+                            </div>
+                        </div>
+                    `).join('');
+
                     grid.innerHTML += `
                         <div class="sap-card">
                             <div class="sap-card-top" style="background-color: ${hexColor}"></div>
@@ -302,22 +287,10 @@
                                         <p class="text-xs text-gray-500">${person.role}</p>
                                     </div>
                                 </div>
-                                <div class="bg-gray-50 rounded p-2 text-xs mb-3 border border-gray-100">
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-gray-500">Start:</span>
-                                        <span class="font-semibold text-gray-800">${person.start}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">End:</span>
-                                        <span class="font-semibold text-gray-800">${person.end}</span>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="badge ${badgeClass}">${person.type}</span>
-                                    <div class="space-x-1">
-                                        <button onclick="handleEditPerson(${person.id})" class="text-gray-400 hover:text-blue-600 transition" title="Edit">✏️</button>
-                                        <button onclick="handleDeletePerson(${person.id})" class="text-gray-400 hover:text-red-600 transition" title="Delete">🗑️</button>
-                                    </div>
+                                <div>${leavesHtml}</div>
+                                <div class="flex justify-end mt-2 space-x-1">
+                                    <button onclick="handleEditPerson(${person.id})" class="text-gray-400 hover:text-blue-600 transition" title="Edit/Add Plan">✏️</button>
+                                    <button onclick="handleDeletePerson(${person.id})" class="text-gray-400 hover:text-red-600 transition" title="Delete">🗑️</button>
                                 </div>
                             </div>
                         </div>
@@ -329,34 +302,33 @@
 
         function renderTimeline() {
             const container = document.getElementById('timeline-container');
-            
-            // Header Row (Apr to Dec 2026)
-            let html = `
-                <div class="timeline-header">Employee</div>
-                <div class="timeline-header flex justify-between px-4 text-xs text-gray-500">
-                    <span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-                </div>
-            `;
+            let html = `<div class="timeline-header">Employee</div>
+                        <div class="timeline-header flex justify-between px-4 text-xs text-gray-500">
+                            <span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+                        </div>`;
 
-            // Sort roster by Start Date
-            const sortedRoster = [...roster].sort((a, b) => new Date(a.start) - new Date(b.start));
+            const sortedRoster = [...roster].sort((a, b) => {
+                const aStart = a.leaves.length > 0 ? new Date(a.leaves[0].start) : new Date("2027-01-01");
+                const bStart = b.leaves.length > 0 ? new Date(b.leaves[0].start) : new Date("2027-01-01");
+                return aStart - bStart;
+            });
             
-            // Hardcoded timeline bounds for 2026 overview (275 days)
             const tlStart = new Date("2026-04-01").getTime();
             const tlEnd = new Date("2026-12-31").getTime();
             const totalDuration = tlEnd - tlStart;
 
             sortedRoster.forEach(person => {
                 const hexColor = crewColorMap[person.color] || '#000';
-                const pStart = new Date(person.start).getTime();
-                const pEnd = new Date(person.end).getTime();
-                
-                // Calculate position percentages
-                let leftPct = Math.max(0, ((pStart - tlStart) / totalDuration) * 100);
-                let widthPct = Math.min(100 - leftPct, ((pEnd - pStart) / totalDuration) * 100);
-                
-                const lineClass = person.type === 'Applied on SAP' ? 'sap' : 'planned';
                 const warningIcon = person.conflict ? '⚠️ ' : '';
+
+                const tracksHtml = person.leaves.map(l => {
+                    const pStart = new Date(l.start).getTime();
+                    const pEnd = new Date(l.end).getTime();
+                    let leftPct = Math.max(0, ((pStart - tlStart) / totalDuration) * 100);
+                    let widthPct = Math.min(100 - leftPct, ((pEnd - pStart) / totalDuration) * 100);
+                    const lineClass = l.type === 'Applied on SAP' ? 'sap' : 'planned';
+                    return `<div class="timeline-line ${lineClass}" style="left: ${leftPct}%; width: ${widthPct}%; ${l.type === 'Applied on SAP' ? `background-color: ${hexColor}` : `border-top-color: ${hexColor}`}" title="${l.start} to ${l.end}"></div>`;
+                }).join('');
 
                 html += `
                     <div class="timeline-row">
@@ -364,17 +336,13 @@
                             <span style="color: ${hexColor}" class="truncate" title="${person.name}">${warningIcon}${person.name}</span>
                             <span class="text-xs text-gray-400">${person.crew}</span>
                         </div>
-                        <div class="timeline-track">
-                            <div class="timeline-line ${lineClass}" style="left: ${leftPct}%; width: ${widthPct}%; ${person.type === 'Applied on SAP' ? `background-color: ${hexColor}` : `border-top-color: ${hexColor}`}" title="${person.start} to ${person.end} (${person.type})"></div>
-                        </div>
+                        <div class="timeline-track">${tracksHtml}</div>
                     </div>
                 `;
             });
-
             container.innerHTML = html;
         }
 
-        // --- CRUD ACTIONS ---
         function handleAddPerson() {
             requirePin(() => {
                 document.getElementById('edit-id').value = '';
@@ -382,9 +350,10 @@
                 document.getElementById('edit-crew').value = 'General';
                 document.getElementById('edit-role').value = '';
                 document.getElementById('edit-color').value = 'crew-grey';
-                document.getElementById('edit-start').value = '2026-05-01';
-                document.getElementById('edit-end').value = '2026-05-15';
+                document.getElementById('edit-start').value = '';
+                document.getElementById('edit-end').value = '';
                 document.getElementById('edit-type').value = 'Planned';
+                document.getElementById('existing-leaves-list').innerHTML = '';
                 document.getElementById('modal-title').innerText = 'Add Person';
                 document.getElementById('edit-modal').showModal();
             });
@@ -400,106 +369,108 @@
                 document.getElementById('edit-crew').value = person.crew;
                 document.getElementById('edit-role').value = person.role;
                 document.getElementById('edit-color').value = person.color;
-                document.getElementById('edit-start').value = person.start;
-                document.getElementById('edit-end').value = person.end;
-                document.getElementById('edit-type').value = person.type;
-                document.getElementById('modal-title').innerText = 'Edit Leave';
+                document.getElementById('edit-start').value = '';
+                document.getElementById('edit-end').value = '';
+                
+                const list = document.getElementById('existing-leaves-list');
+                list.innerHTML = person.leaves.map((l, idx) => `
+                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded border text-xs">
+                        <span>${l.start} to ${l.end} (${l.type})</span>
+                        <button onclick="removeLeave(${person.id}, ${idx})" class="text-red-500 font-bold hover:scale-110">×</button>
+                    </div>
+                `).join('');
+
+                document.getElementById('modal-title').innerText = 'Edit Person & Plans';
                 document.getElementById('edit-modal').showModal();
             });
         }
 
-        function handleDeletePerson(id) {
-            requirePin(() => {
-                if(confirm("Are you sure you want to remove this person's leave record?")) {
-                    roster = roster.filter(p => p.id !== id);
-                    renderAll();
-                }
-            });
+        function removeLeave(personId, leaveIdx) {
+            const person = roster.find(p => p.id === personId);
+            if(person && confirm("Delete this specific leave period?")) {
+                person.leaves.splice(leaveIdx, 1);
+                handleEditPerson(personId); // Refresh modal
+                renderAll();
+            }
         }
 
         function savePerson() {
             const idVal = document.getElementById('edit-id').value;
-            const newData = {
-                name: document.getElementById('edit-name').value,
-                crew: document.getElementById('edit-crew').value,
-                role: document.getElementById('edit-role').value,
-                color: document.getElementById('edit-color').value,
-                start: document.getElementById('edit-start').value,
-                end: document.getElementById('edit-end').value,
-                type: document.getElementById('edit-type').value
-            };
+            const name = document.getElementById('edit-name').value;
+            const start = document.getElementById('edit-start').value;
+            const end = document.getElementById('edit-end').value;
 
-            if (!newData.name || !newData.start || !newData.end) {
-                alert("Name, Start Date, and End Date are required.");
-                return;
-            }
+            if (!name) { alert("Name is required."); return; }
+
+            const newLeave = (start && end) ? {
+                start: start,
+                end: end,
+                type: document.getElementById('edit-type').value
+            } : null;
 
             if (idVal) {
-                // Update
                 const index = roster.findIndex(p => p.id == idVal);
-                if (index > -1) roster[index] = { ...roster[index], ...newData };
+                if (index > -1) {
+                    roster[index].name = name;
+                    roster[index].crew = document.getElementById('edit-crew').value;
+                    roster[index].role = document.getElementById('edit-role').value;
+                    roster[index].color = document.getElementById('edit-color').value;
+                    if (newLeave) roster[index].leaves.push(newLeave);
+                    roster[index].leaves.sort((a,b) => new Date(a.start) - new Date(b.start));
+                }
             } else {
-                // Create
+                if (!newLeave) { alert("Start and End date required for new person."); return; }
                 const newId = roster.length > 0 ? Math.max(...roster.map(p => p.id)) + 1 : 1;
-                roster.push({ id: newId, ...newData });
+                roster.push({
+                    id: newId,
+                    name: name,
+                    crew: document.getElementById('edit-crew').value,
+                    role: document.getElementById('edit-role').value,
+                    color: document.getElementById('edit-color').value,
+                    leaves: [newLeave]
+                });
             }
 
             closeModal();
             renderAll();
         }
 
-        function closeModal() {
-            document.getElementById('edit-modal').close();
+        function handleDeletePerson(id) {
+            requirePin(() => {
+                if(confirm("Remove this person completely?")) {
+                    roster = roster.filter(p => p.id !== id);
+                    renderAll();
+                }
+            });
         }
 
-        // --- EXPORT TO XLSX ---
+        function closeModal() { document.getElementById('edit-modal').close(); }
+
         function exportToExcel() {
             calculateConflicts();
-            
-            const exportData = roster.map(p => ({
-                Name: p.name,
-                Crew: p.crew,
-                Role: p.role,
-                Start: p.start,
-                End: p.end,
-                Type: p.type, // Outputs exactly 'Applied on SAP' or 'Planned'
-                Conflict: p.conflict ? "YES" : "NO",
-                _rawColorHex: crewColorMap[p.color].replace('#', '')
-            }));
+            const flattened = [];
+            roster.forEach(p => {
+                p.leaves.forEach(l => {
+                    flattened.push({
+                        Name: p.name, Crew: p.crew, Role: p.role,
+                        Start: l.start, End: l.end, Type: l.type,
+                        Conflict: p.conflict ? "YES" : "NO",
+                        _hex: crewColorMap[p.color].replace('#', '')
+                    });
+                });
+            });
 
-            const ws = XLSX.utils.json_to_sheet(exportData.map(d => {
-                const { _rawColorHex, ...rest } = d;
-                return rest;
-            }));
-
-            // Apply Cell Background Colors to Name Column, keeping Text Black & Bold
-            for (let i = 0; i < roster.length; i++) {
-                const cellRef = XLSX.utils.encode_cell({ r: i + 1, c: 0 }); // Column A, Row offset for header
-                if (!ws[cellRef]) continue;
-                
-                ws[cellRef].s = {
-                    fill: { fgColor: { rgb: exportData[i]._rawColorHex } },
-                    font: { color: { rgb: "000000" }, bold: true }
-                };
-            }
-
-            // Style headers
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for(let C = range.s.c; C <= range.e.c; ++C) {
-                const cellRef = XLSX.utils.encode_cell({ r: 0, c: C });
-                if(ws[cellRef]) {
-                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "E5E7EB" } } };
-                }
-            }
-
-            ws['!cols'] = [ {wch: 25}, {wch: 10}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 10} ];
+            const ws = XLSX.utils.json_to_sheet(flattened.map(({_hex, ...rest}) => rest));
+            flattened.forEach((row, i) => {
+                const cell = XLSX.utils.encode_cell({ r: i + 1, c: 0 });
+                if (ws[cell]) ws[cell].s = { fill: { fgColor: { rgb: row._hex } }, font: { bold: true } };
+            });
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Leave Planner");
-            XLSX.writeFile(wb, "QIPP-Leave-Planner-2026.xlsx");
+            XLSX.writeFile(wb, "Leave-Planner-2026.xlsx");
         }
 
-        // Initialize App
         window.onload = renderAll;
     </script>
 </body>
