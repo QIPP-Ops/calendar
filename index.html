@@ -3,12 +3,16 @@
 <head>
   <link rel="icon" type="image/png" href="https://www.acwapower.com/images/favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>operation plan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Operation Plan</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1b2940; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1b2940; padding-top: 100px; }
         .sap-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); position: relative; overflow: hidden; border: 1px solid #e5e7eb; }
         .sap-card-top { height: 6px; width: 100%; }
         .badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 999px; }
@@ -26,11 +30,206 @@
         
         .timeline-line.sap { background-color: #4a148c; }
         .timeline-line.planned { border-top: 2px dashed #0288d1; background: transparent; height: 0; }
+
+        .timeline-line.conflict {
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.45);
+            border-radius: 999px;
+        }
+        .timeline-date-label {
+            position: absolute;
+            top: 4px;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #4b5563;
+            pointer-events: none;
+            white-space: nowrap;
+            font-weight: 600;
+        }
         
         dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+
+        /* CREW COLOR MAP */
+        .crew-red { color: #d32f2f; font-weight: 700; }
+        .crew-yellow { color: #f9a825; font-weight: 700; }
+        .crew-green { color: #2e7d32; font-weight: 700; }
+        .crew-lightblue { color: #0288d1; font-weight: 700; }
+        .crew-lightviolet { color: #7b1fa2; font-weight: 700; }
+        .crew-lightorange { color: #ef6c00; font-weight: 700; }
+        .crew-grey { color: #616161; font-weight: 700; }
+
+        /* ═══════════ NEW NAVBAR STYLES ═══════════ */
+        :root {
+            --brand-lilac: #9273DA;
+            --brand-dark: #2E2044;
+            --brand-lime: #D2F050;
+            --common-radius: 12px;
+        }
+
+        /* --- TAILWIND CONFLICT FIX --- */
+        .collapse.show { visibility: visible !important; display: block !important; }
+        .navbar-expand-lg .navbar-collapse { visibility: visible !important; }
+
+        .acwa-navbar {
+            background-color: rgba(46, 34, 53, 0.97) !important;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            padding: 0;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            transition: background-color 0.4s ease, box-shadow 0.4s ease;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.28);
+        }
+        .acwa-navbar.scrolled {
+            background-color: rgba(46, 34, 53, 0.98) !important;
+        }
+        .acwa-navbar .container-fluid { padding: 0 2rem; max-width: 1600px; }
+        .acwa-navbar .navbar-brand { padding: 0; }
+        
+        /* SAFARI SVG BLOWOUT FIX: Explicit Width & Flex-shrink */
+        .navbar-brand svg { 
+            height: 54px !important; 
+            width: 40px !important; 
+            display: block; 
+            flex-shrink: 0;
+        }
+        .navbar-brand svg path { fill: #ffffff !important; }
+
+        .nav-link {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.95) !important;
+            margin: 0.5rem 1rem !important;
+            padding: 0.5rem 0 !important;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s ease, border-color 0.2s ease;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+        .nav-link:hover { color: var(--brand-lime) !important; border-bottom: 3px solid #d4fd89; }
+
+        .navbar-toggler {
+            background-color: #d3f888;
+            border: none !important;
+            border-radius: var(--common-radius);
+            padding: 8px;
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: none !important;
+        }
+        .navbar-toggler-icon { filter: brightness(0); width: 1.2em; height: 1.2em; }
+
+        /* Action Buttons Container */
+        .nav-actions { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            margin-left: 15px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        /* Bulletproof Button Styling */
+        .btn-sap, .btn-mini, .btn-mini-lime {
+            font-family: 'Montserrat', sans-serif;
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            padding: 8px 16px !important;
+            text-decoration: none !important;
+            transition: all 0.2s !important;
+            white-space: nowrap !important;
+            cursor: pointer !important;
+            border: none;
+            -webkit-appearance: none;
+        }
+
+        .btn-sap {
+            border: 2px solid rgba(255,255,255,0.8) !important;
+            color: white !important;
+            background: transparent !important;
+            border-radius: 50px !important;
+        }
+        .btn-sap:hover { background-color: white !important; color: var(--brand-dark) !important; }
+
+        .btn-mini-lime {
+            background-color: var(--brand-lime) !important;
+            color: var(--brand-dark) !important;
+            border-radius: 8px !important;
+        }
+        .btn-mini-lime:hover { background-color: #c0df45 !important; }
+
+        .btn-mini {
+            background-color: var(--brand-lilac) !important;
+            color: white !important;
+            border-radius: 8px !important;
+        }
+        .btn-mini:hover { background-color: #7b5dc2 !important; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: rgba(46,34,53,0.98);
+                padding: 1rem;
+                border-radius: 0 0 12px 12px;
+                position: absolute;
+                top: 100%; left: 0; right: 0;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                z-index: 1050;
+            }
+            .nav-actions { flex-direction: column; align-items: stretch; margin-left: 0; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+            .nav-actions a, .nav-actions button { width: 100% !important; justify-content: center; padding: 12px !important; margin-bottom: 6px; }
+            .nav-link { text-align: center; margin: 0.5rem 0 !important; }
+        }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4 sm:p-6">
+
+    <nav class="navbar navbar-expand-lg acwa-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="https://www.acwapower.com/en">
+                <div style="display:flex; align-items:center;">
+                    <svg viewBox="0 0 65 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.0233 49.9211L36.3917 7.3999C37.9717 4.69273 40.2552 2.21894 41.7544 1.81053V1.49547H28.192C24.2479 1.49547 22.1259 2.84905 19.5195 7.3999L5.09216 32.6863C2.48578 37.2371 2.01294 39.4659 3.43146 43.1415L9.02479 57.3425H9.33617C9.02479 55.6622 10.4433 52.64 12.0117 49.9211H12.0233Z"/>
+                        <path d="M53.6666 49.9215C55.2466 52.6287 56.6651 55.6626 56.3422 57.3429H56.6536L62.3277 43.1419C63.8269 39.4662 63.0427 36.7591 60.667 32.6867L58.222 28.4625C55.6157 23.9117 53.4937 22.5581 49.5495 22.5581H35.9064V22.8732C37.4056 23.2699 39.6891 25.7437 41.2691 28.4625L53.6436 49.9215H53.6666Z"/>
+                        <path d="M56.9318 6.12801C56.5973 5.83629 56.3205 5.83629 55.9745 6.12801L51.0847 10.3288C50.5196 10.8072 50.2082 11.1689 49.943 11.6707H49.8738V7.08485C49.8738 6.44307 50.139 5.84795 50.6349 5.42788L54.3946 2.20728C55.8823 0.923707 57.0356 0.912038 58.5463 2.20728L62.306 5.42788C62.7903 5.84795 63.0671 6.4314 63.0671 7.08485V11.6707H62.9979C62.7327 11.1689 62.4213 10.8072 61.8562 10.3288L56.9664 6.13968L56.9318 6.12801Z"/>
+                    </svg>
+                    <span style="font-family: Montserrat, sans-serif; font-size: 20px; font-weight: 600; color: white; margin-left: 15px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.4); letter-spacing: 1px; line-height: 1;">OPERATIONS</span>
+                </div>
+            </a>
+
+            <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    
+
+
+                        <a href="https://acwapi-my.sharepoint.com/:x:/g/personal/malgarninomac_com/IQB...=" target="_blank" class="btn-mini-lime">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Planned Leaves
+                        </a>
+
+                        <button id="cal-nav-btn" class="btn-mini" type="button" onclick="toggleView()">&#9654; Timeline</button>
+                        
+                        <button type="button" onclick="exportToExcel()" class="btn-mini-lime">&#11015; Export Excel</button>
+                        
+                        <a href="https://hcm23.sapsf.com/sf/home?bplte_company=acwapowerc&_s.crb=J%2foVQaFiQglmCwV3q2esIIrC3Yeb0E3gMiXmWtC2VpY%3d" target="_blank" class="btn-sap">SuccessFactors</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
     <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -38,23 +237,9 @@
                 <h1 class="text-2xl font-bold text-gray-800">Leave Planner 2026</h1>
                 <p class="text-sm text-gray-500 mt-1" id="conflict-banner">Checking for conflicts...</p>
             </div>
-            <div class="flex space-x-3">
-                <button onclick="toggleView()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium transition shadow-sm border border-gray-300">Toggle View (Card / Timeline)</button>
-                <button onclick="handleAddPerson()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition shadow-sm">➕ Add Person</button>
-                <button onclick="exportToExcel()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition shadow-sm">⬇ Export XLSX</button>
-            </div>
         </div>
 
-        <div class="flex flex-wrap gap-4 mb-6 text-sm font-medium p-3 bg-white rounded-lg shadow-sm border border-gray-200">
-            <span class="text-gray-500 mr-2">Color Key:</span>
-            <span style="color: #d32f2f">● Red (Leads/SiCE/Sup)</span>
-            <span style="color: #f9a825">● Yellow</span>
-            <span style="color: #2e7d32">● Green</span>
-            <span style="color: #0288d1">● Light Blue</span>
-            <span style="color: #7b1fa2">● Light Violet</span>
-            <span style="color: #ef6c00">● Light Orange</span>
-            <span style="color: #616161">● Grey</span>
-        </div>
+        
 
         <div id="card-view" class="space-y-8"></div>
 
@@ -76,13 +261,13 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Crew</label>
-                        <select id="edit-crew" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                        <select id="edit-crew" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" onchange="checkModalConflicts()">
                             <option>A</option><option>B</option><option>C</option><option>D</option><option>General</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Role</label>
-                        <input type="text" id="edit-role" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                        <input type="text" id="edit-role" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
                     </div>
                 </div>
                 <div>
@@ -103,13 +288,14 @@
                     <div class="grid grid-cols-2 gap-4 mb-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                            <input type="date" id="edit-start" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                            <input type="date" id="edit-start" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">End Date</label>
-                            <input type="date" id="edit-end" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                            <input type="date" id="edit-end" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
                         </div>
                     </div>
+                    <p id="edit-conflict-warning" class="text-xs mt-1 text-red-600"></p>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Leave Type</label>
                         <select id="edit-type" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
@@ -119,8 +305,7 @@
                     </div>
                 </div>
 
-                <div id="existing-leaves-list" class="space-y-2 mt-4 max-h-32 overflow-y-auto">
-                    </div>
+                <div id="existing-leaves-list" class="space-y-2 mt-4 max-h-32 overflow-y-auto"></div>
             </div>
             
             <div class="mt-6 flex justify-end space-x-3">
@@ -129,6 +314,8 @@
             </div>
         </div>
     </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
     <script>
         let editUnlocked = false;
@@ -145,6 +332,17 @@
             const pin = prompt("Enter PIN to unlock editing:");
             if (pin === "2525") { editUnlocked = true; callback(); }
             else if (pin !== null) { alert("Incorrect PIN."); }
+        }
+
+        // Helper function to remove the year for a cleaner display
+        function formatNoYear(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${months[parseInt(parts[1], 10) - 1]} ${parseInt(parts[2], 10)}`;
+            }
+            return dateString;
         }
 
         let roster = [
@@ -198,11 +396,14 @@
             { id: 48, name: "Bader AlSubait", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
             { id: 49, name: "Faris Al Dawasri", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
             { id: 50, name: "Mohamed Al Hakami", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
-            { id: 51, name: "Saad Al Shahrani", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] }
+            { id: 51, name: "Saad Al Shahrani", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
+            
+            // Added Mohammad Algarni
+            { id: 52, name: "Mohammad Algarni", crew: "General", role: "Operator", color: "crew-lightblue", leaves: [] }
         ];
 
         function calculateConflicts() {
-            roster.forEach(p => p.conflict = false);
+            roster.forEach(p => { p.conflict = false; p.conflictWith = []; });
             let conflictCount = 0;
 
             for (let i = 0; i < roster.length; i++) {
@@ -210,13 +411,19 @@
                     const p1 = roster[i];
                     const p2 = roster[j];
                     if (p1.crew === p2.crew && p1.role === p2.role) {
+                        let pairConflict = false;
                         p1.leaves.forEach(l1 => {
                             p2.leaves.forEach(l2 => {
                                 const s1 = new Date(l1.start), e1 = new Date(l1.end);
                                 const s2 = new Date(l2.start), e2 = new Date(l2.end);
-                                if (s1 <= e2 && s2 <= e1) { p1.conflict = true; p2.conflict = true; }
+                                if (s1 <= e2 && s2 <= e1) { pairConflict = true; }
                             });
                         });
+                        if (pairConflict) {
+                            p1.conflict = true; p2.conflict = true;
+                            if (!p1.conflictWith.includes(p2.name)) p1.conflictWith.push(p2.name);
+                            if (!p2.conflictWith.includes(p1.name)) p2.conflictWith.push(p1.name);
+                        }
                     }
                 }
                 if (roster[i].conflict) conflictCount++;
@@ -233,7 +440,15 @@
         }
 
         function toggleView() {
-            viewMode = viewMode === 'card' ? 'timeline' : 'card';
+            const btn = document.getElementById('cal-nav-btn');
+            if (viewMode === 'card') {
+                viewMode = 'timeline';
+                btn.innerHTML = '&#128592; Dashboard View';
+            } else {
+                viewMode = 'card';
+                btn.innerHTML = '&#9654; Timeline'; 
+            }
+            
             document.getElementById('card-view').style.display = viewMode === 'card' ? 'block' : 'none';
             document.getElementById('timeline-view').style.display = viewMode === 'timeline' ? 'block' : 'none';
         }
@@ -267,9 +482,9 @@
                                 <span class="text-[10px] text-gray-400 font-mono">${Math.ceil((new Date(l.end)-new Date(l.start))/(1000*60*60*24))}d</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">${l.start}</span>
+                                <span class="text-gray-500">${formatNoYear(l.start)}</span>
                                 <span class="text-gray-400">→</span>
-                                <span class="font-semibold text-gray-800">${l.end}</span>
+                                <span class="font-semibold text-gray-800">${formatNoYear(l.end)}</span>
                             </div>
                         </div>
                     `).join('');
@@ -321,6 +536,7 @@
             sortedRoster.forEach(person => {
                 const hexColor = crewColorMap[person.color] || '#000';
                 const warningIcon = person.conflict ? '⚠️ ' : '';
+                const conflictNames = Array.isArray(person.conflictWith) && person.conflictWith.length > 0 ? person.conflictWith.join(', ') : '';
 
                 const tracksHtml = person.leaves.map(l => {
                     const pStart = new Date(l.start).getTime();
@@ -328,7 +544,22 @@
                     let leftPct = Math.max(0, ((pStart - tlStart) / totalDuration) * 100);
                     let widthPct = Math.min(100 - leftPct, ((pEnd - pStart) / totalDuration) * 100);
                     const lineClass = l.type === 'Applied on SAP' ? 'sap' : 'planned';
-                    return `<div class="timeline-line ${lineClass}" style="left: ${leftPct}%; width: ${widthPct}%; ${l.type === 'Applied on SAP' ? `background-color: ${hexColor}` : `border-top-color: ${hexColor}`}" title="${l.start} to ${l.end}"></div>`;
+                    const conflictClass = person.conflict ? 'conflict' : '';
+                    
+                    const formattedStart = formatNoYear(l.start);
+                    const formattedEnd = formatNoYear(l.end);
+
+                    const tooltip = person.conflict && conflictNames
+                        ? `⚠️ CONFLICTS WITH: ${conflictNames}`
+                        : `${formattedStart} to ${formattedEnd}`;
+                    const leftEdge = leftPct;
+                    const rightEdge = leftPct + widthPct;
+                    return `
+                        <div>
+                            <span class="timeline-date-label" style="left:${leftEdge}%">${formattedStart}</span>
+                            <span class="timeline-date-label" style="left:${rightEdge}%">${formattedEnd}</span>
+                            <div class="timeline-line ${lineClass} ${conflictClass}" style="left: ${leftPct}%; width: ${widthPct}%; ${l.type === 'Applied on SAP' ? `background-color: ${hexColor}` : `border-top-color: ${hexColor}`}" title="${tooltip}"></div>
+                        </div>`;
                 }).join('');
 
                 html += `
@@ -342,6 +573,33 @@
                 `;
             });
             container.innerHTML = html;
+        }
+
+        function checkModalConflicts() {
+            const start = document.getElementById('edit-start').value;
+            const end = document.getElementById('edit-end').value;
+            const crew = document.getElementById('edit-crew').value;
+            const role = document.getElementById('edit-role').value;
+            const idVal = document.getElementById('edit-id').value;
+            const warningEl = document.getElementById('edit-conflict-warning');
+            if (!start || !end || !crew || !role) { warningEl.textContent = ''; return; }
+            const sNew = new Date(start), eNew = new Date(end);
+            const conflicts = [];
+            roster.forEach(p => {
+                if (idVal && String(p.id) === String(idVal)) return;
+                if (p.crew === crew && p.role === role) {
+                    p.leaves.forEach(l => {
+                        const s = new Date(l.start), e = new Date(l.end);
+                        if (sNew <= e && s <= eNew) { conflicts.push(p.name); }
+                    });
+                }
+            });
+            if (conflicts.length > 0) {
+                const unique = [...new Set(conflicts)];
+                warningEl.textContent = `⚠️ Conflicts with: ${unique.join(', ')}`;
+            } else {
+                warningEl.textContent = '';
+            }
         }
 
         function handleAddPerson() {
@@ -376,7 +634,7 @@
                 const list = document.getElementById('existing-leaves-list');
                 list.innerHTML = person.leaves.map((l, idx) => `
                     <div class="flex justify-between items-center bg-gray-50 p-2 rounded border text-xs">
-                        <span>${l.start} to ${l.end} (${l.type})</span>
+                        <span>${formatNoYear(l.start)} to ${formatNoYear(l.end)} (${l.type})</span>
                         <button onclick="removeLeave(${person.id}, ${idx})" class="text-red-500 font-bold hover:scale-110">×</button>
                     </div>
                 `).join('');
@@ -471,6 +729,18 @@
             XLSX.utils.book_append_sheet(wb, ws, "Leave Planner");
             XLSX.writeFile(wb, "Leave-Planner-2026.xlsx");
         }
+
+        // Scroll listener for Navbar
+        window.addEventListener('scroll', function() {
+            const nb = document.querySelector('.acwa-navbar');
+            if (nb) {
+                if (window.scrollY > 50) {
+                    nb.classList.add('scrolled');
+                } else {
+                    nb.classList.remove('scrolled');
+                }
+            }
+        });
 
         window.onload = renderAll;
     </script>
