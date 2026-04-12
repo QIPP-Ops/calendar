@@ -303,7 +303,7 @@
       );
       const json = JSON.parse(decoded);
       roster = Array.isArray(json.roster) ? json.roster : [];
-      showToast(`&#10003; Loaded ${roster.length} people`, 'success');
+      showToast(` ${roster.length} `, 'success');
     } catch(e) {
       showToast('Load failed: ' + e.message, 'error', 6000);
       console.error('GitHub load error:', e);
