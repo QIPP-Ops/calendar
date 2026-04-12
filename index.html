@@ -2,747 +2,595 @@
 <html lang="en">
 <head>
   <link rel="icon" type="image/png" href="https://www.acwapower.com/images/favicon.png">
-    <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Operation Plan</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1b2940; padding-top: 100px; }
-        .sap-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); position: relative; overflow: hidden; border: 1px solid #e5e7eb; }
-        .sap-card-top { height: 6px; width: 100%; }
-        .badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 999px; }
-        
-        .badge-sap { background-color: #e8def8; color: #4a148c; }
-        .badge-planned { background-color: #e0f2fe; color: #0288d1; border: 1px dashed #0288d1; }
-        .badge-conflict { background-color: #fee2e2; color: #b91c1c; }
-        
-        .timeline-grid { display: grid; grid-template-columns: 220px 1fr; border: 1px solid #e5e7eb; background: white; }
-        .timeline-header { background: #f9fafb; font-weight: 600; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
-        .timeline-row { display: contents; }
-        .timeline-name { padding: 0.5rem; border-bottom: 1px solid #f3f4f6; border-right: 1px solid #e5e7eb; font-size: 0.875rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-        .timeline-track { position: relative; border-bottom: 1px solid #f3f4f6; height: 100%; min-height: 48px; }
-        .timeline-line { position: absolute; height: 4px; top: 50%; transform: translateY(-50%); border-radius: 2px; }
-        
-        .timeline-line.sap { background-color: #4a148c; }
-        .timeline-line.planned { border-top: 2px dashed #0288d1; background: transparent; height: 0; }
-
-        .timeline-line.conflict {
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.45);
-            border-radius: 999px;
-        }
-        .timeline-date-label {
-            position: absolute;
-            top: 4px;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: #4b5563;
-            pointer-events: none;
-            white-space: nowrap;
-            font-weight: 600;
-        }
-        
-        dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-
-        /* CREW COLOR MAP */
-        .crew-red { color: #d32f2f; font-weight: 700; }
-        .crew-yellow { color: #f9a825; font-weight: 700; }
-        .crew-green { color: #2e7d32; font-weight: 700; }
-        .crew-lightblue { color: #0288d1; font-weight: 700; }
-        .crew-lightviolet { color: #7b1fa2; font-weight: 700; }
-        .crew-lightorange { color: #ef6c00; font-weight: 700; }
-        .crew-grey { color: #616161; font-weight: 700; }
-
-        /* ═══════════ NEW NAVBAR STYLES ═══════════ */
-        :root {
-            --brand-lilac: #9273DA;
-            --brand-dark: #2E2044;
-            --brand-lime: #D2F050;
-            --common-radius: 12px;
-        }
-
-        /* --- TAILWIND CONFLICT FIX --- */
-        .collapse.show { visibility: visible !important; display: block !important; }
-        .navbar-expand-lg .navbar-collapse { visibility: visible !important; }
-
-        .acwa-navbar {
-            background-color: rgba(46, 34, 53, 0.97) !important;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            padding: 0;
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 1000;
-            transition: background-color 0.4s ease, box-shadow 0.4s ease;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.28);
-        }
-        .acwa-navbar.scrolled {
-            background-color: rgba(46, 34, 53, 0.98) !important;
-        }
-        .acwa-navbar .container-fluid { padding: 0 2rem; max-width: 1600px; }
-        .acwa-navbar .navbar-brand { padding: 0; }
-        
-        /* SAFARI SVG BLOWOUT FIX: Explicit Width & Flex-shrink */
-        .navbar-brand svg { 
-            height: 54px !important; 
-            width: 40px !important; 
-            display: block; 
-            flex-shrink: 0;
-        }
-        .navbar-brand svg path { fill: #ffffff !important; }
-
-        .nav-link {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: rgba(255,255,255,0.95) !important;
-            margin: 0.5rem 1rem !important;
-            padding: 0.5rem 0 !important;
-            border-bottom: 3px solid transparent;
-            transition: color 0.2s ease, border-color 0.2s ease;
-            text-transform: capitalize;
-            white-space: nowrap;
-        }
-        .nav-link:hover { color: var(--brand-lime) !important; border-bottom: 3px solid #d4fd89; }
-
-        .navbar-toggler {
-            background-color: #d3f888;
-            border: none !important;
-            border-radius: var(--common-radius);
-            padding: 8px;
-            width: 42px; height: 42px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: none !important;
-        }
-        .navbar-toggler-icon { filter: brightness(0); width: 1.2em; height: 1.2em; }
-
-        /* Action Buttons Container */
-        .nav-actions { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            margin-left: 15px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        /* Bulletproof Button Styling */
-        .btn-sap, .btn-mini, .btn-mini-lime {
-            font-family: 'Montserrat', sans-serif;
-            display: inline-flex; 
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            padding: 8px 16px !important;
-            text-decoration: none !important;
-            transition: all 0.2s !important;
-            white-space: nowrap !important;
-            cursor: pointer !important;
-            border: none;
-            -webkit-appearance: none;
-        }
-
-        .btn-sap {
-            border: 2px solid rgba(255,255,255,0.8) !important;
-            color: white !important;
-            background: transparent !important;
-            border-radius: 50px !important;
-        }
-        .btn-sap:hover { background-color: white !important; color: var(--brand-dark) !important; }
-
-        .btn-mini-lime {
-            background-color: var(--brand-lime) !important;
-            color: var(--brand-dark) !important;
-            border-radius: 8px !important;
-        }
-        .btn-mini-lime:hover { background-color: #c0df45 !important; }
-
-        .btn-mini {
-            background-color: var(--brand-lilac) !important;
-            color: white !important;
-            border-radius: 8px !important;
-        }
-        .btn-mini:hover { background-color: #7b5dc2 !important; }
-
-        /* Mobile Adjustments */
-        @media (max-width: 991px) {
-            .navbar-collapse {
-                background: rgba(46,34,53,0.98);
-                padding: 1rem;
-                border-radius: 0 0 12px 12px;
-                position: absolute;
-                top: 100%; left: 0; right: 0;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-                z-index: 1050;
-            }
-            .nav-actions { flex-direction: column; align-items: stretch; margin-left: 0; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
-            .nav-actions a, .nav-actions button { width: 100% !important; justify-content: center; padding: 12px !important; margin-bottom: 6px; }
-            .nav-link { text-align: center; margin: 0.5rem 0 !important; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Operation Plan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1b2940; padding-top: 100px; }
+    .sap-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); position: relative; overflow: hidden; border: 1px solid #e5e7eb; }
+    .sap-card-top { height: 6px; width: 100%; }
+    .badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 999px; }
+    .badge-sap      { background-color: #e8def8; color: #4a148c; }
+    .badge-planned  { background-color: #e0f2fe; color: #0288d1; border: 1px dashed #0288d1; }
+    .badge-conflict { background-color: #fee2e2; color: #b91c1c; }
+    .timeline-grid { display: grid; grid-template-columns: 220px 1fr; border: 1px solid #e5e7eb; background: white; }
+    .timeline-header { background: #f9fafb; font-weight: 600; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+    .timeline-row { display: contents; }
+    .timeline-name { padding: 0.5rem; border-bottom: 1px solid #f3f4f6; border-right: 1px solid #e5e7eb; font-size: 0.875rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    .timeline-track { position: relative; border-bottom: 1px solid #f3f4f6; height: 100%; min-height: 48px; }
+    .timeline-line { position: absolute; height: 4px; top: 50%; transform: translateY(-50%); border-radius: 2px; }
+    .timeline-line.sap { background-color: #4a148c; }
+    .timeline-line.planned { border-top: 2px dashed #0288d1; background: transparent; height: 0; }
+    .timeline-line.conflict { box-shadow: 0 0 0 3px rgba(220,38,38,0.45); border-radius: 999px; }
+    .timeline-date-label { position: absolute; top: 4px; transform: translateX(-50%); font-size: 10px; color: #4b5563; pointer-events: none; white-space: nowrap; font-weight: 600; }
+    dialog::backdrop { background: rgba(0,0,0,0.5); }
+    .crew-red         { color: #d32f2f; font-weight: 700; }
+    .crew-yellow      { color: #f9a825; font-weight: 700; }
+    .crew-green       { color: #2e7d32; font-weight: 700; }
+    .crew-lightblue   { color: #0288d1; font-weight: 700; }
+    .crew-lightviolet { color: #7b1fa2; font-weight: 700; }
+    .crew-lightorange { color: #ef6c00; font-weight: 700; }
+    .crew-grey        { color: #616161; font-weight: 700; }
+    :root { --brand-lilac:#9273DA; --brand-dark:#2E2044; --brand-lime:#D2F050; --common-radius:12px; }
+    .collapse.show { visibility:visible !important; display:block !important; }
+    .navbar-expand-lg .navbar-collapse { visibility:visible !important; }
+    .acwa-navbar { background-color:rgba(46,34,53,0.97) !important; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); padding:0; position:fixed; top:0; left:0; right:0; z-index:1000; transition:background-color .4s,box-shadow .4s; box-shadow:0 4px 24px rgba(0,0,0,.28); }
+    .acwa-navbar.scrolled { background-color:rgba(46,34,53,0.98) !important; }
+    .acwa-navbar .container-fluid { padding:0 2rem; max-width:1600px; }
+    .acwa-navbar .navbar-brand { padding:0; }
+    .navbar-brand svg { height:54px !important; width:40px !important; display:block; flex-shrink:0; }
+    .navbar-brand svg path { fill:#ffffff !important; }
+    .nav-link { font-family:'Montserrat',sans-serif; font-size:.95rem; font-weight:500; color:rgba(255,255,255,.95) !important; margin:.5rem 1rem !important; padding:.5rem 0 !important; border-bottom:3px solid transparent; transition:color .2s,border-color .2s; text-transform:capitalize; white-space:nowrap; }
+    .nav-link:hover { color:var(--brand-lime) !important; border-bottom:3px solid #d4fd89; }
+    .navbar-toggler { background-color:#d3f888; border:none !important; border-radius:var(--common-radius); padding:8px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; box-shadow:none !important; }
+    .navbar-toggler-icon { filter:brightness(0); width:1.2em; height:1.2em; }
+    .nav-actions { display:flex; align-items:center; gap:8px; margin-left:15px; flex-wrap:wrap; justify-content:flex-end; }
+    .btn-sap,.btn-mini,.btn-mini-lime { font-family:'Montserrat',sans-serif; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:13px !important; font-weight:600 !important; padding:8px 16px !important; text-decoration:none !important; transition:all .2s !important; white-space:nowrap !important; cursor:pointer !important; border:none; -webkit-appearance:none; }
+    .btn-sap       { border:2px solid rgba(255,255,255,.8) !important; color:white !important; background:transparent !important; border-radius:50px !important; }
+    .btn-sap:hover { background-color:white !important; color:var(--brand-dark) !important; }
+    .btn-mini-lime { background-color:var(--brand-lime) !important; color:var(--brand-dark) !important; border-radius:8px !important; }
+    .btn-mini-lime:hover { background-color:#c0df45 !important; }
+    .btn-mini      { background-color:var(--brand-lilac) !important; color:white !important; border-radius:8px !important; }
+    .btn-mini:hover { background-color:#7b5dc2 !important; }
+    #toast { position:fixed; bottom:24px; right:24px; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:9999; opacity:0; transition:opacity .3s; pointer-events:none; color:white; }
+    #toast.show { opacity:1; }
+    #toast.success { background:#2e7d32; }
+    #toast.error   { background:#b91c1c; }
+    #toast.saving  { background:#0288d1; }
+    @media(max-width:991px){
+      .navbar-collapse { background:rgba(46,34,53,.98); padding:1rem; border-radius:0 0 12px 12px; position:absolute; top:100%; left:0; right:0; box-shadow:0 10px 25px rgba(0,0,0,.5); z-index:1050; }
+      .nav-actions { flex-direction:column; align-items:stretch; margin-left:0; padding-top:15px; border-top:1px solid rgba(255,255,255,.1); }
+      .nav-actions a,.nav-actions button { width:100% !important; justify-content:center; padding:12px !important; margin-bottom:6px; }
+      .nav-link { text-align:center; margin:.5rem 0 !important; }
+    }
+  </style>
 </head>
 <body class="p-4 sm:p-6">
 
-    <nav class="navbar navbar-expand-lg acwa-navbar">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="https://www.acwapower.com/en">
-                <div style="display:flex; align-items:center;">
-                    <svg viewBox="0 0 65 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12.0233 49.9211L36.3917 7.3999C37.9717 4.69273 40.2552 2.21894 41.7544 1.81053V1.49547H28.192C24.2479 1.49547 22.1259 2.84905 19.5195 7.3999L5.09216 32.6863C2.48578 37.2371 2.01294 39.4659 3.43146 43.1415L9.02479 57.3425H9.33617C9.02479 55.6622 10.4433 52.64 12.0117 49.9211H12.0233Z"/>
-                        <path d="M53.6666 49.9215C55.2466 52.6287 56.6651 55.6626 56.3422 57.3429H56.6536L62.3277 43.1419C63.8269 39.4662 63.0427 36.7591 60.667 32.6867L58.222 28.4625C55.6157 23.9117 53.4937 22.5581 49.5495 22.5581H35.9064V22.8732C37.4056 23.2699 39.6891 25.7437 41.2691 28.4625L53.6436 49.9215H53.6666Z"/>
-                        <path d="M56.9318 6.12801C56.5973 5.83629 56.3205 5.83629 55.9745 6.12801L51.0847 10.3288C50.5196 10.8072 50.2082 11.1689 49.943 11.6707H49.8738V7.08485C49.8738 6.44307 50.139 5.84795 50.6349 5.42788L54.3946 2.20728C55.8823 0.923707 57.0356 0.912038 58.5463 2.20728L62.306 5.42788C62.7903 5.84795 63.0671 6.4314 63.0671 7.08485V11.6707H62.9979C62.7327 11.1689 62.4213 10.8072 61.8562 10.3288L56.9664 6.13968L56.9318 6.12801Z"/>
-                    </svg>
-                    <span style="font-family: Montserrat, sans-serif; font-size: 20px; font-weight: 600; color: white; margin-left: 15px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.4); letter-spacing: 1px; line-height: 1;">OPERATIONS</span>
-                </div>
-            </a>
-
-            <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                    
-
-
-                        <a href="https://acwapi-my.sharepoint.com/:x:/g/personal/malgarninomac_com/IQB...=" target="_blank" class="btn-mini-lime">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                <polyline points="15 3 21 3 21 9"/>
-                                <line x1="10" y1="14" x2="21" y2="3"/>
-                            </svg>
-                            Planned Leaves
-                        </a>
-
-                        <button id="cal-nav-btn" class="btn-mini" type="button" onclick="toggleView()">&#9654; Timeline</button>
-                        
-                        <button type="button" onclick="exportToExcel()" class="btn-mini-lime">&#11015; Export Excel</button>
-                        
-                        <a href="https://hcm23.sapsf.com/sf/home?bplte_company=acwapowerc&_s.crb=J%2foVQaFiQglmCwV3q2esIIrC3Yeb0E3gMiXmWtC2VpY%3d" target="_blank" class="btn-sap">SuccessFactors</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Leave Planner 2026</h1>
-                <p class="text-sm text-gray-500 mt-1" id="conflict-banner">Checking for conflicts...</p>
-            </div>
-        </div>
-
-        
-
-        <div id="card-view" class="space-y-8"></div>
-
-        <div id="timeline-view" class="hidden overflow-x-auto pb-8">
-            <div class="timeline-grid min-w-[1200px]" id="timeline-container"></div>
-        </div>
+<nav class="navbar navbar-expand-lg acwa-navbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="https://www.acwapower.com/en/">
+      <div style="display:flex;align-items:center;">
+        <svg viewBox="0 0 65 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.0233 49.9211L36.3917 7.3999C37.9717 4.69273 40.2552 2.21894 41.7544 1.81053V1.49547H28.192C24.2479 1.49547 22.1259 2.84905 19.5195 7.3999L5.09216 32.6863C2.48578 37.2371 2.01294 39.4659 3.43146 43.1415L9.02479 57.3425H9.33617C9.02479 55.6622 10.4433 52.64 12.0117 49.9211H12.0233Z"/>
+          <path d="M53.6666 49.9215C55.2466 52.6287 56.6651 55.6626 56.3422 57.3429H56.6536L62.3277 43.1419C63.8269 39.4662 63.0427 36.7591 60.667 32.6867L58.222 28.4625C55.6157 23.9117 53.4937 22.5581 49.5495 22.5581H35.9064V22.8732C37.4056 23.2699 39.6891 25.7437 41.2691 28.4625L53.6436 49.9215H53.6666Z"/>
+          <path d="M56.9318 6.12801C56.5973 5.83629 56.3205 5.83629 55.9745 6.12801L51.0847 10.3288C50.5196 10.8072 50.2082 11.1689 49.943 11.6707H49.8738V7.08485C49.8738 6.44307 50.139 5.84795 50.6349 5.42788L54.3946 2.20728C55.8823 0.923707 57.0356 0.912038 58.5463 2.20728L62.306 5.42788C62.7903 5.84795 63.0671 6.4314 63.0671 7.08485V11.6707H62.9979C62.7327 11.1689 62.4213 10.8072 61.8562 10.3288L56.9664 6.13968L56.9318 6.12801Z"/>
+        </svg>
+        <span style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:600;color:white;margin-left:15px;padding-left:15px;border-left:1px solid rgba(255,255,255,0.4);letter-spacing:1px;line-height:1;">OPERATIONS</span>
+      </div>
+    </a>
+    <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+        <li class="nav-item nav-actions">
+          <a href="https://acwapi-my.sharepoint.com/:x:/g/personal/m_algarni_nomac_com/IQBX9-3015HcT6C0FTLuB_lOAfVqMX5BJTYTqFMVOwZ7nwE?e=dQHZWw" target="_blank" class="btn-mini-lime">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Planned Leaves
+          </a>
+          <button id="cal-nav-btn" class="btn-mini" type="button" onclick="toggleView()">&#9654; Timeline</button>
+          <button type="button" onclick="exportToExcel()" class="btn-mini-lime">&#10015; Export Excel</button>
+          
+          <a href="https://hcm23.sapsf.com/sf/home?bplte_company=acwapowerc" target="_blank" class="btn-sap">SuccessFactors</a>
+        </li>
+      </ul>
     </div>
+  </div>
+</nav>
 
-    <dialog id="edit-modal" class="p-0 rounded-lg shadow-xl border-0 w-full max-w-md">
-        <div class="p-6 bg-white">
-            <h2 class="text-xl font-bold mb-4" id="modal-title">Edit Leave</h2>
-            <input type="hidden" id="edit-id">
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Name</label>
-                    <input type="text" id="edit-name" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border focus:border-blue-500 outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Crew</label>
-                        <select id="edit-crew" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" onchange="checkModalConflicts()">
-                            <option>A</option><option>B</option><option>C</option><option>D</option><option>General</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Role</label>
-                        <input type="text" id="edit-role" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Color</label>
-                    <select id="edit-color" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
-                        <option value="crew-red">Red</option>
-                        <option value="crew-yellow">Yellow</option>
-                        <option value="crew-green">Green</option>
-                        <option value="crew-lightblue">Light Blue</option>
-                        <option value="crew-lightviolet">Light Violet</option>
-                        <option value="crew-lightorange">Light Orange</option>
-                        <option value="crew-grey">Grey</option>
-                    </select>
-                </div>
+<div id="toast"></div>
 
-                <div class="border-t pt-4">
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Add New Leave Period</p>
-                    <div class="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                            <input type="date" id="edit-start" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">End Date</label>
-                            <input type="date" id="edit-end" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
-                        </div>
-                    </div>
-                    <p id="edit-conflict-warning" class="text-xs mt-1 text-red-600"></p>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Leave Type</label>
-                        <select id="edit-type" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
-                            <option value="Applied on SAP">Applied on SAP</option>
-                            <option value="Planned">Planned</option>
-                        </select>
-                    </div>
-                </div>
+<div class="max-w-7xl mx-auto">
+  <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Leave Planner 2026</h1>
+      <p class="text-sm text-gray-500 mt-1" id="conflict-banner">Loading data from GitHub...</p>
+    </div>
+  </div>
+  <div id="card-view" class="space-y-8"></div>
+  <div id="timeline-view" class="hidden overflow-x-auto pb-8">
+    <div class="timeline-grid min-w-[1200px]" id="timeline-container"></div>
+  </div>
+</div>
 
-                <div id="existing-leaves-list" class="space-y-2 mt-4 max-h-32 overflow-y-auto"></div>
-            </div>
-            
-            <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Cancel</button>
-                <button type="button" onclick="savePerson()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Changes</button>
-            </div>
+<!-- EDIT MODAL -->
+<dialog id="edit-modal" class="p-0 rounded-lg shadow-xl border-0 w-full max-w-md">
+  <div class="p-6 bg-white">
+    <h2 class="text-xl font-bold mb-4" id="modal-title">Edit Leave</h2>
+    <input type="hidden" id="edit-id">
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" id="edit-name" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border focus:border-blue-500 outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Crew</label>
+          <select id="edit-crew" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" onchange="checkModalConflicts()">
+            <option>A</option><option>B</option><option>C</option><option>D</option><option>General</option>
+          </select>
         </div>
-    </dialog>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Role</label>
+          <input type="text" id="edit-role" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Color</label>
+        <select id="edit-color" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+          <option value="crew-red">Red</option>
+          <option value="crew-yellow">Yellow</option>
+          <option value="crew-green">Green</option>
+          <option value="crew-lightblue">Light Blue</option>
+          <option value="crew-lightviolet">Light Violet</option>
+          <option value="crew-lightorange">Light Orange</option>
+          <option value="crew-grey">Grey</option>
+        </select>
+      </div>
+      <div class="border-t pt-4">
+        <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Add New Leave Period</p>
+        <div class="grid grid-cols-2 gap-4 mb-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+            <input type="date" id="edit-start" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">End Date</label>
+            <input type="date" id="edit-end" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border" oninput="checkModalConflicts()">
+          </div>
+        </div>
+        <p id="edit-conflict-warning" class="text-xs mt-1 text-red-600"></p>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Leave Type</label>
+          <select id="edit-type" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+            <option value="Applied on SAP">Applied on SAP</option>
+            <option value="Planned">Planned</option>
+          </select>
+        </div>
+      </div>
+      <div id="existing-leaves-list" class="space-y-2 mt-4 max-h-32 overflow-y-auto"></div>
+    </div>
+    <div class="mt-6 flex justify-end space-x-3">
+      <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Cancel</button>
+      <button type="button" onclick="savePerson()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">&#10003; Save Changes</button>
+    </div>
+  </div>
+</dialog>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+  // ═══════════════════════════════════════════════════════════
+  //  !! CONFIGURE THESE TWO LINES WITH YOUR GITHUB DETAILS !!
+  // ═══════════════════════════════════════════════════════════
+  const GH_OWNER  = 'QIPP-Ops';
+  const GH_REPO   = 'calendar';
+  const GH_BRANCH = 'main';
+  const GH_FILE   = 'data.json';               // path to your data file
+  // ═══════════════════════════════════════════════════════════
 
-    <script>
-        let editUnlocked = false;
-        let viewMode = 'card';
-        
-        const crewColorMap = {
-            "crew-red": "#d32f2f", "crew-yellow": "#f9a825", "crew-green": "#2e7d32",
-            "crew-lightblue": "#0288d1", "crew-lightviolet": "#7b1fa2",
-            "crew-lightorange": "#ef6c00", "crew-grey": "#616161"
-        };
+  let ghToken  = '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';
+  sessionStorage.setItem('gh_token', ghToken);
+  let fileSHA  = null;   // GitHub requires current SHA to update a file
+  let editUnlocked = false;
+  let viewMode = 'card';
+  let roster   = [];
 
-        function requirePin(callback) {
-            if (editUnlocked) { callback(); return; }
-            const pin = prompt("Enter PIN to unlock editing:");
-            if (pin === "2525") { editUnlocked = true; callback(); }
-            else if (pin !== null) { alert("Incorrect PIN."); }
+  const crewColorMap = {
+    'crew-red':'d32f2f','crew-yellow':'f9a825','crew-green':'2e7d32',
+    'crew-lightblue':'0288d1','crew-lightviolet':'7b1fa2',
+    'crew-lightorange':'ef6c00','crew-grey':'616161'
+  };
+
+  // ── TOAST ───────────────────────────────────────────────────
+  function showToast(msg, type='success', duration=2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.className = '', duration);
+  }
+
+  // ── GITHUB API ──────────────────────────────────────────────
+  function apiUrl() {
+    return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`;
+  }
+
+  function getToken() {
+    if (ghToken) return ghToken;
+    const t = prompt(
+      'Enter your GitHub Personal Access Token (PAT).\n' +
+      'It will be remembered for this browser session only.\n\n' +
+      'Needs "Contents: Read & Write" permission on the repo.'
+    );
+    if (!t) { showToast('No token — read-only mode.', 'error', 4000); return null; }
+    ghToken = t.trim();
+    sessionStorage.setItem('gh_token', ghToken);
+    return ghToken;
+  }
+
+  async function loadFromGitHub() {
+    document.getElementById('conflict-banner').innerHTML =
+      '<span class="text-blue-600">Loading data from GitHub...</span>';
+    try {
+      const headers = {
+        'Authorization': `Bearer ${ghToken}`,
+        'Accept': 'application/vnd.github+json'
+      };
+      const res = await fetch(apiUrl(), { headers });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err.message || 'HTTP ' + res.status));
+      }
+      const meta = await res.json();
+      fileSHA = meta.sha;
+      // content is base64-encoded
+      const decoded = decodeURIComponent(
+        escape(atob(meta.content.replace(/\n/g, '')))
+      );
+      const json = JSON.parse(decoded);
+      roster = Array.isArray(json.roster) ? json.roster : [];
+      showToast(`&#10003; Loaded ${roster.length} people`, 'success');
+    } catch(e) {
+      showToast('Load failed: ' + e.message, 'error', 6000);
+      console.error('GitHub load error:', e);
+    }
+    renderAll();
+  }
+
+  async function saveToGitHub() {
+    const token = getToken();
+    if (!token) return;
+
+    showToast('Saving to GitHub...', 'saving', 60000);
+
+    const content = btoa(unescape(encodeURIComponent(
+      JSON.stringify({ roster }, null, 2)
+    )));
+
+    const body = {
+      message: `Update leave data — ${new Date().toISOString()}`,
+      content,
+      branch: GH_BRANCH
+    };
+    if (fileSHA) body.sha = fileSHA;
+
+    try {
+      const res = await fetch(apiUrl(), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || res.status);
+      }
+
+      const data = await res.json();
+      fileSHA = data.content.sha;   // update SHA for next save
+      showToast('&#10003; Saved to GitHub!', 'success');
+    } catch(e) {
+      showToast('Save failed: ' + e.message, 'error', 6000);
+      console.error(e);
+    }
+  }
+
+  // ── HELPERS ─────────────────────────────────────────────────
+  function requirePin(cb) {
+    if (editUnlocked) { cb(); return; }
+    const pin = prompt('Enter PIN to unlock editing:');
+    if (pin === '2525') { editUnlocked = true; cb(); }
+    else if (pin !== null) alert('Incorrect PIN.');
+  }
+
+  function formatNoYear(d) {
+    if (!d) return '';
+    const p = d.split('-');
+    if (p.length === 3) {
+      const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return m[parseInt(p[1],10)-1] + ' ' + parseInt(p[2],10);
+    }
+    return d;
+  }
+
+  function getInitials(name) {
+    return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+  }
+
+  // ── CONFLICTS ────────────────────────────────────────────────
+  function calculateConflicts() {
+    roster.forEach(p => { p.conflict = false; p.conflictWith = []; });
+    let count = 0;
+    for (let i = 0; i < roster.length; i++) {
+      for (let j = i+1; j < roster.length; j++) {
+        const p1 = roster[i], p2 = roster[j];
+        if (p1.crew !== p2.crew || p1.role !== p2.role) continue;
+        let hit = false;
+        p1.leaves.forEach(l1 => p2.leaves.forEach(l2 => {
+          if (new Date(l1.start) <= new Date(l2.end) && new Date(l2.start) <= new Date(l1.end)) hit = true;
+        }));
+        if (hit) {
+          p1.conflict = p2.conflict = true;
+          if (!p1.conflictWith.includes(p2.name)) p1.conflictWith.push(p2.name);
+          if (!p2.conflictWith.includes(p1.name)) p2.conflictWith.push(p1.name);
         }
+      }
+    }
+    roster.forEach(p => { if (p.conflict) count++; });
+    document.getElementById('conflict-banner').innerHTML = count > 0
+      ? `<span class="text-red-600 font-bold">${count} schedule conflicts detected.</span>`
+      : `<span class="text-green-600 font-bold">No conflicts detected. ${roster.length} people loaded.</span>`;
+  }
 
-        // Helper function to remove the year for a cleaner display
-        function formatNoYear(dateString) {
-            if (!dateString) return '';
-            const parts = dateString.split('-');
-            if (parts.length === 3) {
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                return `${months[parseInt(parts[1], 10) - 1]} ${parseInt(parts[2], 10)}`;
-            }
-            return dateString;
+  // ── RENDER ───────────────────────────────────────────────────
+  function renderAll() { calculateConflicts(); renderCards(); renderTimeline(); }
+
+  function toggleView() {
+    const btn = document.getElementById('cal-nav-btn');
+    viewMode = viewMode === 'card' ? 'timeline' : 'card';
+    btn.innerHTML = viewMode === 'card' ? '&#9654; Timeline' : '&#8592; Card View';
+    document.getElementById('card-view').style.display     = viewMode === 'card'     ? 'block' : 'none';
+    document.getElementById('timeline-view').style.display = viewMode === 'timeline' ? 'block' : 'none';
+  }
+
+  function renderCards() {
+    const container = document.getElementById('card-view');
+    container.innerHTML = '';
+    ['A','B','C','D','General'].forEach(crew => {
+      const members = roster.filter(p => p.crew === crew);
+      if (!members.length) return;
+      const section = document.createElement('div');
+      section.innerHTML = `<h2 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Crew ${crew}</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>`;
+      const grid = section.querySelector('div');
+      members.forEach(p => {
+        const hex = crewColorMap[p.color] || '000';
+        const conflictBadge = p.conflict ? `<span class="badge badge-conflict absolute top-2 right-2">Conflict</span>` : '';
+        const leavesHtml = p.leaves.map(l => `
+          <div class="bg-gray-50 rounded p-2 text-xs mb-2 border border-gray-100">
+            <div class="flex justify-between items-center mb-1">
+              <span class="badge ${l.type==='Applied on SAP'?'badge-sap':'badge-planned'}">${l.type}</span>
+              <span class="text-gray-400 font-mono">${Math.ceil((new Date(l.end)-new Date(l.start))/86400000)}d</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">${formatNoYear(l.start)}</span>
+              <span class="text-gray-400">&#8594;</span>
+              <span class="font-semibold text-gray-800">${formatNoYear(l.end)}</span>
+            </div>
+          </div>`).join('');
+        grid.innerHTML += `
+          <div class="sap-card">
+            <div class="sap-card-top" style="background-color:#${hex}"></div>
+            ${conflictBadge}
+            <div class="p-4 pt-5 relative">
+              <div class="flex items-center space-x-3 mb-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background-color:#${hex}">${getInitials(p.name)}</div>
+                <div>
+                  <h3 class="font-bold text-sm" style="color:#${hex}">${p.name}</h3>
+                  <p class="text-xs text-gray-500">${p.role}</p>
+                </div>
+              </div>
+              ${leavesHtml}
+              <div class="flex justify-end mt-2 space-x-1">
+                <button onclick="handleEditPerson(${p.id})" class="text-gray-400 hover:text-blue-600 transition" title="Edit">&#9998;</button>
+                <button onclick="handleDeletePerson(${p.id})" class="text-gray-400 hover:text-red-600 transition" title="Delete">&#128465;</button>
+              </div>
+            </div>
+          </div>`;
+      });
+      container.appendChild(section);
+    });
+  }
+
+  function renderTimeline() {
+    const container = document.getElementById('timeline-container');
+    const tlStart = new Date('2026-04-01').getTime();
+    const tlEnd   = new Date('2026-12-31').getTime();
+    const total   = tlEnd - tlStart;
+    const sorted  = [...roster].sort((a,b) => {
+      const as = a.leaves.length ? new Date(a.leaves[0].start) : new Date('2027-01-01');
+      const bs = b.leaves.length ? new Date(b.leaves[0].start) : new Date('2027-01-01');
+      return as - bs;
+    });
+    let html = `
+      <div class="timeline-header">Employee</div>
+      <div class="timeline-header flex justify-between px-4 text-xs text-gray-500">
+        <span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+        <span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+      </div>`;
+    sorted.forEach(p => {
+      const hex    = crewColorMap[p.color] || '000';
+      const warn   = p.conflict ? '&#9888; ' : '';
+      const cNames = (p.conflictWith||[]).join(', ');
+      const tracks = p.leaves.map(l => {
+        const left  = Math.max(0,(new Date(l.start).getTime()-tlStart)/total*100);
+        const width = Math.min(100-left,(new Date(l.end).getTime()-new Date(l.start).getTime())/total*100);
+        const cls   = l.type==='Applied on SAP' ? 'sap' : 'planned';
+        const conf  = p.conflict ? 'conflict' : '';
+        const tip   = (p.conflict && cNames ? `CONFLICTS WITH ${cNames} | ` : '') + `${formatNoYear(l.start)} to ${formatNoYear(l.end)}`;
+        const style = l.type==='Applied on SAP' ? `background-color:#${hex}` : `border-top-color:#${hex}`;
+        return `<div>
+          <span class="timeline-date-label" style="left:${left}%">${formatNoYear(l.start)}</span>
+          <span class="timeline-date-label" style="left:${left+width}%">${formatNoYear(l.end)}</span>
+          <div class="timeline-line ${cls} ${conf}" style="left:${left}%;width:${width}%;${style}" title="${tip}"></div>
+        </div>`;
+      }).join('');
+      html += `
+        <div class="timeline-row">
+          <div class="timeline-name hover:bg-gray-50 cursor-pointer" onclick="handleEditPerson(${p.id})">
+            <span style="color:#${hex}" class="truncate" title="${p.name}">${warn}${p.name}</span>
+            <span class="text-xs text-gray-400">${p.crew}</span>
+          </div>
+          <div class="timeline-track">${tracks}</div>
+        </div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  // ── MODAL / CRUD ─────────────────────────────────────────────
+  function checkModalConflicts() {
+    const start = document.getElementById('edit-start').value;
+    const end   = document.getElementById('edit-end').value;
+    const crew  = document.getElementById('edit-crew').value;
+    const role  = document.getElementById('edit-role').value;
+    const idVal = document.getElementById('edit-id').value;
+    const warn  = document.getElementById('edit-conflict-warning');
+    if (!start||!end||!crew||!role) { warn.textContent=''; return; }
+    const sN = new Date(start), eN = new Date(end);
+    const hits = [];
+    roster.forEach(p => {
+      if (idVal && String(p.id)===String(idVal)) return;
+      if (p.crew===crew && p.role===role)
+        p.leaves.forEach(l => { if (sN<=new Date(l.end) && new Date(l.start)<=eN) hits.push(p.name); });
+    });
+    warn.textContent = hits.length ? '&#9888; Conflicts with: ' + [...new Set(hits)].join(', ') : '';
+  }
+
+  function handleAddPerson() {
+    requirePin(() => {
+      ['edit-id','edit-name','edit-role','edit-start','edit-end'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('edit-crew').value  = 'General';
+      document.getElementById('edit-color').value = 'crew-grey';
+      document.getElementById('edit-type').value  = 'Planned';
+      document.getElementById('existing-leaves-list').innerHTML = '';
+      document.getElementById('edit-conflict-warning').textContent = '';
+      document.getElementById('modal-title').innerText = 'Add Person';
+      document.getElementById('edit-modal').showModal();
+    });
+  }
+
+  function handleEditPerson(id) {
+    requirePin(() => {
+      const p = roster.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('edit-id').value    = p.id;
+      document.getElementById('edit-name').value  = p.name;
+      document.getElementById('edit-crew').value  = p.crew;
+      document.getElementById('edit-role').value  = p.role;
+      document.getElementById('edit-color').value = p.color;
+      document.getElementById('edit-start').value = '';
+      document.getElementById('edit-end').value   = '';
+      document.getElementById('edit-conflict-warning').textContent = '';
+      document.getElementById('existing-leaves-list').innerHTML = p.leaves.map((l,i) => `
+        <div class="flex justify-between items-center bg-gray-50 p-2 rounded border text-xs">
+          <span>${formatNoYear(l.start)} &#8594; ${formatNoYear(l.end)} &middot; ${l.type}</span>
+          <button onclick="removeLeave(${p.id},${i})" class="text-red-500 font-bold ml-2">&#10005;</button>
+        </div>`).join('');
+      document.getElementById('modal-title').innerText = 'Edit Person Plans';
+      document.getElementById('edit-modal').showModal();
+    });
+  }
+
+  function removeLeave(personId, idx) {
+    const p = roster.find(x => x.id===personId);
+    if (p && confirm('Delete this leave period?')) {
+      p.leaves.splice(idx,1);
+      saveToGitHub();
+      handleEditPerson(personId);
+      renderAll();
+    }
+  }
+
+  function savePerson() {
+    const idVal = document.getElementById('edit-id').value;
+    const name  = document.getElementById('edit-name').value.trim();
+    const start = document.getElementById('edit-start').value;
+    const end   = document.getElementById('edit-end').value;
+    if (!name) { alert('Name is required.'); return; }
+    const newLeave = (start&&end) ? {start, end, type: document.getElementById('edit-type').value} : null;
+    if (idVal) {
+      const i = roster.findIndex(p => String(p.id) === String(idVal));
+      if (i !== -1) {
+        roster[i].name  = name;
+        roster[i].crew  = document.getElementById('edit-crew').value;
+        roster[i].role  = document.getElementById('edit-role').value;
+        roster[i].color = document.getElementById('edit-color').value;
+        if (newLeave) {
+          roster[i].leaves.push(newLeave);
+          roster[i].leaves.sort((a,b) => new Date(a.start)-new Date(b.start));
         }
+      }
+    } else {
+      if (!newLeave) { alert('Start and End dates are required for a new person.'); return; }
+      const newId = roster.length ? Math.max(...roster.map(p=>p.id))+1 : 1;
+      roster.push({
+        id: newId, name,
+        crew:  document.getElementById('edit-crew').value,
+        role:  document.getElementById('edit-role').value,
+        color: document.getElementById('edit-color').value,
+        leaves: [newLeave]
+      });
+    }
+    saveToGitHub();   // ← commits directly to your GitHub repo
+    closeModal();
+    renderAll();
+  }
 
-        let roster = [
-            { id: 1, name: "Izhar Ali", crew: "C", role: "Local Operator", color: "crew-lightviolet", leaves: [{ start: "2026-04-21", end: "2026-05-02", type: "Applied on SAP" }] },
-            { id: 2, name: "Purushothaman", crew: "A", role: "Local Operator", color: "crew-lightviolet", leaves: [{ start: "2026-04-27", end: "2026-05-07", type: "Applied on SAP" }] },
-            { id: 3, name: "Juma Khan", crew: "General", role: "Operator", color: "crew-green", leaves: [{ start: "2026-04-29", end: "2026-05-14", type: "Applied on SAP" }] },
-            { id: 4, name: "Mustafa Salem", crew: "D", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-05-19", end: "2026-06-19", type: "Applied on SAP" }] },
-            { id: 5, name: "Ahmed Alsaqoor", crew: "D", role: "CCR Operator", color: "crew-lightviolet", leaves: [{ start: "2026-05-19", end: "2026-06-11", type: "Applied on SAP" }] },
-            { id: 6, name: "Syed Shahnawaz Ahmed", crew: "A", role: "Supervisor", color: "crew-red", leaves: [{ start: "2026-05-20", end: "2026-06-04", type: "Applied on SAP" }] },
-            { id: 7, name: "Abdul Hameed", crew: "General", role: "Operator", color: "crew-grey", leaves: [{ start: "2026-05-20", end: "2026-06-10", type: "Applied on SAP" }] },
-            { id: 8, name: "Waleed Fayad", crew: "C", role: "CCR Operator", color: "crew-green", leaves: [{ start: "2026-05-31", end: "2026-06-23", type: "Applied on SAP" }] },
-            { id: 9, name: "Mark Ramirez", crew: "D", role: "Local Operator", color: "crew-lightviolet", leaves: [{ start: "2026-05-31", end: "2026-06-15", type: "Applied on SAP" }] },
-            { id: 10, name: "Ahmed Fathy", crew: "A", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-06-06", end: "2026-06-14", type: "Applied on SAP" }] },
-            { id: 11, name: "Moustafa Elansari", crew: "C", role: "Supervisor", color: "crew-red", leaves: [{ start: "2026-06-16", end: "2026-06-28", type: "Applied on SAP" }] },
-            { id: 12, name: "Veera Prasad", crew: "D", role: "Supervisor", color: "crew-green", leaves: [{ start: "2026-07-06", end: "2026-08-06", type: "Applied on SAP" }] },
-            { id: 13, name: "Lakshmy Prasad", crew: "D", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-07-14", end: "2026-08-10", type: "Applied on SAP" }] },
-            { id: 14, name: "Prathapan", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-07-22", end: "2026-08-18", type: "Applied on SAP" }] },
-            { id: 15, name: "Zaid Almarri", crew: "A", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
-            { id: 16, name: "Sami Hamdan", crew: "A", role: "CCR Operator", color: "crew-yellow", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
-            { id: 17, name: "Fawaz Al Qahtani", crew: "A", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
-            { id: 18, name: "Abdulwahab Al-Shehab", crew: "A", role: "CCR Operator", color: "crew-lightviolet", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
-            { id: 19, name: "Shaheer Yousaf", crew: "A", role: "CCR Operator", color: "crew-green", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
-            { id: 20, name: "Mohamed Al Dossary", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
-            { id: 21, name: "Abdullah Altulayhi", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
-            { id: 22, name: "Bakr Abdulmajeed", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
-            { id: 23, name: "Saad Salem Al Hajiri", crew: "A", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-08-16", end: "2026-08-30", type: "Planned" }] },
-            { id: 24, name: "Abdulhadi Mohammed Saleh", crew: "A", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
-            { id: 25, name: "Abdullah Al Amri", crew: "B", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
-            { id: 26, name: "Kanaka Naga Srinivasu Kolli", crew: "B", role: "Supervisor", color: "crew-red", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
-            { id: 27, name: "Ahmed Fawaz", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
-            { id: 28, name: "Rashed Alhajri", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
-            { id: 29, name: "Saravanakumar Madhaiyan", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
-            { id: 30, name: "Abdullah Mohiddin Alshahrani", crew: "B", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
-            { id: 31, name: "Mohammed Mulhim", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
-            { id: 32, name: "Mohammed Afnan", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-08-16", end: "2026-08-30", type: "Planned" }] },
-            { id: 33, name: "Abdelaziz Al Harbi", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
-            { id: 34, name: "Amjad Alruwaytie", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
-            { id: 35, name: "Abderahman Al Anezie", crew: "B", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
-            { id: 36, name: "Alaa Alrefae", crew: "C", role: "SiCE", color: "crew-red", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
-            { id: 37, name: "Abdullah Al Hajri", crew: "C", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
-            { id: 38, name: "Yasser Althuiqeb", crew: "C", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
-            { id: 39, name: "Norbie Cruz", crew: "C", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
-            { id: 40, name: "Khalid Saleh Khalousi", crew: "C", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
-            { id: 41, name: "Saad Al Enize", crew: "C", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
-            { id: 42, name: "Abderahman Al Baqmi", crew: "C", role: "Local Operator", color: "crew-lightorange", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
-            { id: 43, name: "Ali Al Qahtani", crew: "C", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
-            { id: 44, name: "Saleh Mohammed Al Amri", crew: "D", role: "CCR Operator", color: "crew-yellow", leaves: [{ start: "2026-08-01", end: "2026-08-15", type: "Planned" }] },
-            { id: 45, name: "Hassan Arshad", crew: "D", role: "CCR Operator", color: "crew-lightblue", leaves: [{ start: "2026-09-01", end: "2026-09-15", type: "Planned" }] },
-            { id: 46, name: "Rajesh Muniasamy", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-09-16", end: "2026-09-30", type: "Planned" }] },
-            { id: 47, name: "Mohammed Al Ghamdi", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-10-01", end: "2026-10-15", type: "Planned" }] },
-            { id: 48, name: "Bader AlSubait", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-10-16", end: "2026-10-30", type: "Planned" }] },
-            { id: 49, name: "Faris Al Dawasri", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-11-01", end: "2026-11-15", type: "Planned" }] },
-            { id: 50, name: "Mohamed Al Hakami", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-11-16", end: "2026-11-30", type: "Planned" }] },
-            { id: 51, name: "Saad Al Shahrani", crew: "D", role: "Local Operator", color: "crew-grey", leaves: [{ start: "2026-12-01", end: "2026-12-15", type: "Planned" }] },
-            
-            // Added Mohammad Algarni
-            { id: 52, name: "Mohammad Algarni", crew: "General", role: "Operator", color: "crew-lightblue", leaves: [] }
-        ];
+  function handleDeletePerson(id) {
+    requirePin(() => {
+      if (confirm('Remove this person completely?')) {
+        roster = roster.filter(p => p.id !== id);
+        saveToGitHub();
+        renderAll();
+      }
+    });
+  }
 
-        function calculateConflicts() {
-            roster.forEach(p => { p.conflict = false; p.conflictWith = []; });
-            let conflictCount = 0;
+  function closeModal() { document.getElementById('edit-modal').close(); }
 
-            for (let i = 0; i < roster.length; i++) {
-                for (let j = i + 1; j < roster.length; j++) {
-                    const p1 = roster[i];
-                    const p2 = roster[j];
-                    if (p1.crew === p2.crew && p1.role === p2.role) {
-                        let pairConflict = false;
-                        p1.leaves.forEach(l1 => {
-                            p2.leaves.forEach(l2 => {
-                                const s1 = new Date(l1.start), e1 = new Date(l1.end);
-                                const s2 = new Date(l2.start), e2 = new Date(l2.end);
-                                if (s1 <= e2 && s2 <= e1) { pairConflict = true; }
-                            });
-                        });
-                        if (pairConflict) {
-                            p1.conflict = true; p2.conflict = true;
-                            if (!p1.conflictWith.includes(p2.name)) p1.conflictWith.push(p2.name);
-                            if (!p2.conflictWith.includes(p1.name)) p2.conflictWith.push(p1.name);
-                        }
-                    }
-                }
-                if (roster[i].conflict) conflictCount++;
-            }
+  // ── EXCEL EXPORT ─────────────────────────────────────────────
+  function exportToExcel() {
+    calculateConflicts();
+    const rows = [];
+    roster.forEach(p => p.leaves.forEach(l => rows.push({
+      Name:p.name, Crew:p.crew, Role:p.role,
+      Start:l.start, End:l.end, Type:l.type,
+      Conflict:p.conflict?'YES':'NO', _hex:crewColorMap[p.color]
+    })));
+    const ws = XLSX.utils.json_to_sheet(rows.map(({_hex,...r})=>r));
+    rows.forEach((r,i) => {
+      const c = XLSX.utils.encode_cell({r:i+1,c:0});
+      if (ws[c]) ws[c].s = {fill:{fgColor:{rgb:r._hex}},font:{bold:true}};
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Leave Planner');
+    XLSX.writeFile(wb, 'Leave-Planner-2026.xlsx');
+  }
 
-            const banner = document.getElementById('conflict-banner');
-            banner.innerHTML = conflictCount > 0 ? `<span class="text-red-600 font-bold">⚠️ ${conflictCount} schedule conflicts detected.</span>` : `<span class="text-green-600 font-bold">✓ No conflicts detected.</span>`;
-        }
+  // ── BOOT ─────────────────────────────────────────────────────
+  window.addEventListener('scroll', () => {
+    document.querySelector('.acwa-navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
 
-        function renderAll() {
-            calculateConflicts();
-            renderCards();
-            renderTimeline();
-        }
-
-        function toggleView() {
-            const btn = document.getElementById('cal-nav-btn');
-            if (viewMode === 'card') {
-                viewMode = 'timeline';
-                btn.innerHTML = '&#128592; Dashboard View';
-            } else {
-                viewMode = 'card';
-                btn.innerHTML = '&#9654; Timeline'; 
-            }
-            
-            document.getElementById('card-view').style.display = viewMode === 'card' ? 'block' : 'none';
-            document.getElementById('timeline-view').style.display = viewMode === 'timeline' ? 'block' : 'none';
-        }
-
-        function getInitials(name) {
-            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        }
-
-        function renderCards() {
-            const container = document.getElementById('card-view');
-            container.innerHTML = '';
-            const crews = ['A', 'B', 'C', 'D', 'General'];
-            
-            crews.forEach(crew => {
-                const crewMembers = roster.filter(p => p.crew === crew);
-                if (crewMembers.length === 0) return;
-
-                const section = document.createElement('div');
-                section.innerHTML = `<h2 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Crew ${crew}</h2>
-                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>`;
-                const grid = section.querySelector('div');
-
-                crewMembers.forEach(person => {
-                    const hexColor = crewColorMap[person.color] || '#000';
-                    const conflictHtml = person.conflict ? `<span class="badge badge-conflict absolute top-2 right-2">⚠️ Conflict</span>` : '';
-                    
-                    const leavesHtml = person.leaves.map((l, idx) => `
-                        <div class="bg-gray-50 rounded p-2 text-xs mb-2 border border-gray-100">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="badge ${l.type === 'Applied on SAP' ? 'badge-sap' : 'badge-planned'}">${l.type}</span>
-                                <span class="text-[10px] text-gray-400 font-mono">${Math.ceil((new Date(l.end)-new Date(l.start))/(1000*60*60*24))}d</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">${formatNoYear(l.start)}</span>
-                                <span class="text-gray-400">→</span>
-                                <span class="font-semibold text-gray-800">${formatNoYear(l.end)}</span>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    grid.innerHTML += `
-                        <div class="sap-card">
-                            <div class="sap-card-top" style="background-color: ${hexColor}"></div>
-                            ${conflictHtml}
-                            <div class="p-4 pt-5 relative">
-                                <div class="flex items-center space-x-3 mb-3">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background-color: ${hexColor}">
-                                        ${getInitials(person.name)}
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-sm" style="color: ${hexColor}">${person.name}</h3>
-                                        <p class="text-xs text-gray-500">${person.role}</p>
-                                    </div>
-                                </div>
-                                <div>${leavesHtml}</div>
-                                <div class="flex justify-end mt-2 space-x-1">
-                                    <button onclick="handleEditPerson(${person.id})" class="text-gray-400 hover:text-blue-600 transition" title="Edit/Add Plan">✏️</button>
-                                    <button onclick="handleDeletePerson(${person.id})" class="text-gray-400 hover:text-red-600 transition" title="Delete">🗑️</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.appendChild(section);
-            });
-        }
-
-        function renderTimeline() {
-            const container = document.getElementById('timeline-container');
-            let html = `<div class="timeline-header">Employee</div>
-                        <div class="timeline-header flex justify-between px-4 text-xs text-gray-500">
-                            <span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-                        </div>`;
-
-            const sortedRoster = [...roster].sort((a, b) => {
-                const aStart = a.leaves.length > 0 ? new Date(a.leaves[0].start) : new Date("2027-01-01");
-                const bStart = b.leaves.length > 0 ? new Date(b.leaves[0].start) : new Date("2027-01-01");
-                return aStart - bStart;
-            });
-            
-            const tlStart = new Date("2026-04-01").getTime();
-            const tlEnd = new Date("2026-12-31").getTime();
-            const totalDuration = tlEnd - tlStart;
-
-            sortedRoster.forEach(person => {
-                const hexColor = crewColorMap[person.color] || '#000';
-                const warningIcon = person.conflict ? '⚠️ ' : '';
-                const conflictNames = Array.isArray(person.conflictWith) && person.conflictWith.length > 0 ? person.conflictWith.join(', ') : '';
-
-                const tracksHtml = person.leaves.map(l => {
-                    const pStart = new Date(l.start).getTime();
-                    const pEnd = new Date(l.end).getTime();
-                    let leftPct = Math.max(0, ((pStart - tlStart) / totalDuration) * 100);
-                    let widthPct = Math.min(100 - leftPct, ((pEnd - pStart) / totalDuration) * 100);
-                    const lineClass = l.type === 'Applied on SAP' ? 'sap' : 'planned';
-                    const conflictClass = person.conflict ? 'conflict' : '';
-                    
-                    const formattedStart = formatNoYear(l.start);
-                    const formattedEnd = formatNoYear(l.end);
-
-                    const tooltip = person.conflict && conflictNames
-                        ? `⚠️ CONFLICTS WITH: ${conflictNames}`
-                        : `${formattedStart} to ${formattedEnd}`;
-                    const leftEdge = leftPct;
-                    const rightEdge = leftPct + widthPct;
-                    return `
-                        <div>
-                            <span class="timeline-date-label" style="left:${leftEdge}%">${formattedStart}</span>
-                            <span class="timeline-date-label" style="left:${rightEdge}%">${formattedEnd}</span>
-                            <div class="timeline-line ${lineClass} ${conflictClass}" style="left: ${leftPct}%; width: ${widthPct}%; ${l.type === 'Applied on SAP' ? `background-color: ${hexColor}` : `border-top-color: ${hexColor}`}" title="${tooltip}"></div>
-                        </div>`;
-                }).join('');
-
-                html += `
-                    <div class="timeline-row">
-                        <div class="timeline-name hover:bg-gray-50 group cursor-pointer" onclick="handleEditPerson(${person.id})">
-                            <span style="color: ${hexColor}" class="truncate" title="${person.name}">${warningIcon}${person.name}</span>
-                            <span class="text-xs text-gray-400">${person.crew}</span>
-                        </div>
-                        <div class="timeline-track">${tracksHtml}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function checkModalConflicts() {
-            const start = document.getElementById('edit-start').value;
-            const end = document.getElementById('edit-end').value;
-            const crew = document.getElementById('edit-crew').value;
-            const role = document.getElementById('edit-role').value;
-            const idVal = document.getElementById('edit-id').value;
-            const warningEl = document.getElementById('edit-conflict-warning');
-            if (!start || !end || !crew || !role) { warningEl.textContent = ''; return; }
-            const sNew = new Date(start), eNew = new Date(end);
-            const conflicts = [];
-            roster.forEach(p => {
-                if (idVal && String(p.id) === String(idVal)) return;
-                if (p.crew === crew && p.role === role) {
-                    p.leaves.forEach(l => {
-                        const s = new Date(l.start), e = new Date(l.end);
-                        if (sNew <= e && s <= eNew) { conflicts.push(p.name); }
-                    });
-                }
-            });
-            if (conflicts.length > 0) {
-                const unique = [...new Set(conflicts)];
-                warningEl.textContent = `⚠️ Conflicts with: ${unique.join(', ')}`;
-            } else {
-                warningEl.textContent = '';
-            }
-        }
-
-        function handleAddPerson() {
-            requirePin(() => {
-                document.getElementById('edit-id').value = '';
-                document.getElementById('edit-name').value = '';
-                document.getElementById('edit-crew').value = 'General';
-                document.getElementById('edit-role').value = '';
-                document.getElementById('edit-color').value = 'crew-grey';
-                document.getElementById('edit-start').value = '';
-                document.getElementById('edit-end').value = '';
-                document.getElementById('edit-type').value = 'Planned';
-                document.getElementById('existing-leaves-list').innerHTML = '';
-                document.getElementById('modal-title').innerText = 'Add Person';
-                document.getElementById('edit-modal').showModal();
-            });
-        }
-
-        function handleEditPerson(id) {
-            requirePin(() => {
-                const person = roster.find(p => p.id === id);
-                if (!person) return;
-                
-                document.getElementById('edit-id').value = person.id;
-                document.getElementById('edit-name').value = person.name;
-                document.getElementById('edit-crew').value = person.crew;
-                document.getElementById('edit-role').value = person.role;
-                document.getElementById('edit-color').value = person.color;
-                document.getElementById('edit-start').value = '';
-                document.getElementById('edit-end').value = '';
-                
-                const list = document.getElementById('existing-leaves-list');
-                list.innerHTML = person.leaves.map((l, idx) => `
-                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded border text-xs">
-                        <span>${formatNoYear(l.start)} to ${formatNoYear(l.end)} (${l.type})</span>
-                        <button onclick="removeLeave(${person.id}, ${idx})" class="text-red-500 font-bold hover:scale-110">×</button>
-                    </div>
-                `).join('');
-
-                document.getElementById('modal-title').innerText = 'Edit Person & Plans';
-                document.getElementById('edit-modal').showModal();
-            });
-        }
-
-        function removeLeave(personId, leaveIdx) {
-            const person = roster.find(p => p.id === personId);
-            if(person && confirm("Delete this specific leave period?")) {
-                person.leaves.splice(leaveIdx, 1);
-                handleEditPerson(personId); // Refresh modal
-                renderAll();
-            }
-        }
-
-        function savePerson() {
-            const idVal = document.getElementById('edit-id').value;
-            const name = document.getElementById('edit-name').value;
-            const start = document.getElementById('edit-start').value;
-            const end = document.getElementById('edit-end').value;
-
-            if (!name) { alert("Name is required."); return; }
-
-            const newLeave = (start && end) ? {
-                start: start,
-                end: end,
-                type: document.getElementById('edit-type').value
-            } : null;
-
-            if (idVal) {
-                const index = roster.findIndex(p => p.id == idVal);
-                if (index > -1) {
-                    roster[index].name = name;
-                    roster[index].crew = document.getElementById('edit-crew').value;
-                    roster[index].role = document.getElementById('edit-role').value;
-                    roster[index].color = document.getElementById('edit-color').value;
-                    if (newLeave) roster[index].leaves.push(newLeave);
-                    roster[index].leaves.sort((a,b) => new Date(a.start) - new Date(b.start));
-                }
-            } else {
-                if (!newLeave) { alert("Start and End date required for new person."); return; }
-                const newId = roster.length > 0 ? Math.max(...roster.map(p => p.id)) + 1 : 1;
-                roster.push({
-                    id: newId,
-                    name: name,
-                    crew: document.getElementById('edit-crew').value,
-                    role: document.getElementById('edit-role').value,
-                    color: document.getElementById('edit-color').value,
-                    leaves: [newLeave]
-                });
-            }
-
-            closeModal();
-            renderAll();
-        }
-
-        function handleDeletePerson(id) {
-            requirePin(() => {
-                if(confirm("Remove this person completely?")) {
-                    roster = roster.filter(p => p.id !== id);
-                    renderAll();
-                }
-            });
-        }
-
-        function closeModal() { document.getElementById('edit-modal').close(); }
-
-        function exportToExcel() {
-            calculateConflicts();
-            const flattened = [];
-            roster.forEach(p => {
-                p.leaves.forEach(l => {
-                    flattened.push({
-                        Name: p.name, Crew: p.crew, Role: p.role,
-                        Start: l.start, End: l.end, Type: l.type,
-                        Conflict: p.conflict ? "YES" : "NO",
-                        _hex: crewColorMap[p.color].replace('#', '')
-                    });
-                });
-            });
-
-            const ws = XLSX.utils.json_to_sheet(flattened.map(({_hex, ...rest}) => rest));
-            flattened.forEach((row, i) => {
-                const cell = XLSX.utils.encode_cell({ r: i + 1, c: 0 });
-                if (ws[cell]) ws[cell].s = { fill: { fgColor: { rgb: row._hex } }, font: { bold: true } };
-            });
-
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Leave Planner");
-            XLSX.writeFile(wb, "Leave-Planner-2026.xlsx");
-        }
-
-        // Scroll listener for Navbar
-        window.addEventListener('scroll', function() {
-            const nb = document.querySelector('.acwa-navbar');
-            if (nb) {
-                if (window.scrollY > 50) {
-                    nb.classList.add('scrolled');
-                } else {
-                    nb.classList.remove('scrolled');
-                }
-            }
-        });
-
-        window.onload = renderAll;
-    </script>
+  window.onload = loadFromGitHub;
+</script>
 </body>
 </html>
