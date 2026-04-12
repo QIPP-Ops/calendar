@@ -98,28 +98,7 @@
           </a>
           <button id="cal-nav-btn" class="btn-mini" type="button" onclick="toggleView()">&#9654; Timeline</button>
           <button
-  id="btn-export-manpower"
-  onclick="exportQIPP('manpower')"
-  title="Export Manpower QIPP 2026 April update.xlsx"
-  style="
-    background:#9273DA; color:#2E2044; font-family:'Montserrat',sans-serif;
-    font-weight:700; font-size:13px; padding:9px 18px; border:none;
-    border-radius:6px; cursor:pointer; margin:4px;
-  ">
-  ⬇ Manpower QIPP
-</button>
-
-<button
-  id="btn-export-leave"
-  onclick="exportQIPP('leave')"
-  title="Export QIPP Annual Leave 2026.xlsx"
-  style="
-    background:#D2F050; color:#2E2044; font-family:'Montserrat',sans-serif;
-    font-weight:700; font-size:13px; padding:9px 18px; border:none;
-    border-radius:6px; cursor:pointer; margin:4px;
-  ">
-  ⬇ Annual Leave
-</button>
+ 
           <button type="button" onclick="exportToExcel()" class="btn-mini-lime"> ⬇ Export Excel</button>
          
           <a href="https://hcm23.sapsf.com/sf/home?bplte_company=acwapowerc" target="_blank" class="btn-sap">SuccessFactors</a>
@@ -685,109 +664,115 @@
   function closeModal() { document.getElementById('edit-modal').close(); }
 
 async function exportToExcel() {
-  calculateConflicts();
-  showToast('Generating Excel...', 'saving', 5000);
+  try {
+    calculateConflicts();
+    showToast('Generating Excel...', 'saving', 5000);
 
-  // 1. Map every day of 2026 to its exact Excel Column Index
-  // In ExcelJS, columns are 1-indexed. Column J = 10.
-  const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  const dateToCol = {};
-  let colIdx = 10; 
+    // 1. Map every day of 2026 to its exact Excel Column Index
+    // In ExcelJS, columns are 1-indexed. Column J = 10.
+    const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const dateToCol = {};
+    let colIdx = 10; 
 
-  for (let m = 0; m < 12; m++) {
-    for (let d = 1; d <= MONTH_DAYS[m]; d++) {
-      const dateStr = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      dateToCol[dateStr] = colIdx++;
-    }
-  }
-
-  // 2. Decode the Base64 template into an ArrayBuffer
-  const binaryString = window.atob(_NEW_TEMPLATE_B64);
-  const binaryLen = binaryString.length;
-  const bytes = new Uint8Array(binaryLen);
-  for (let i = 0; i < binaryLen; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-
-  // 3. Load the workbook using ExcelJS (Preserves all original styles!)
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(bytes.buffer);
-  const ws = workbook.worksheets[0]; // Select the first sheet
-
-  // Helper to find person by ID
-  function findRP(empId) {
-    const id = String(empId || '').trim();
-    return roster.find(p => String(p.empId).trim() === id);
-  }
-
-  // 4. Loop through the rows. Data starts at Row 6. Scanning down to Row 200.
-  for (let r = 6; r <= 200; r++) {
-    const idCell = ws.getCell(r, 1); // Col A is 1
-    
-    // Safely extract ID (handles plain text or Excel formulas)
-    let rawId = idCell.value;
-    if (typeof rawId === 'object' && rawId !== null) rawId = rawId.result || rawId.text || '';
-    const empId = String(rawId || '').trim();
-
-    if (!empId) continue;
-
-    const rp = findRP(empId);
-    if (!rp) continue;
-
-    // Clear existing calendar days for this person (Col 10 to Col 374)
-    for (let c = 10; c <= 374; c++) {
-      const cell = ws.getCell(r, c);
-      cell.value = null;
-      cell.fill = { type: 'pattern', pattern: 'none' }; // Remove color but keep borders
+    for (let m = 0; m < 12; m++) {
+      for (let d = 1; d <= MONTH_DAYS[m]; d++) {
+        const dateStr = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        dateToCol[dateStr] = colIdx++;
+      }
     }
 
-    // Paint the Leaves onto the Calendar
-    if (rp.leaves && rp.leaves.length > 0) {
-      for (const lv of rp.leaves) {
-        let cur = new Date(lv.start + 'T00:00:00');
-        let end = new Date(lv.end + 'T00:00:00');
+    // 2. Decode the Base64 template into an ArrayBuffer
+    const binaryString = window.atob(_NEW_TEMPLATE_B64);
+    const binaryLen = binaryString.length;
+    const bytes = new Uint8Array(binaryLen);
+    for (let i = 0; i < binaryLen; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
 
-        while (cur <= end) {
-          const key = cur.toISOString().slice(0, 10);
-          const c = dateToCol[key];
+    // 3. Load the workbook using ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(bytes.buffer);
+    const ws = workbook.worksheets[0]; // Select the first sheet
 
-          if (c !== undefined) {
-            const cell = ws.getCell(r, c);
-            const isSAP = (lv.type === 'Applied on SAP');
+    // Helper to find person by ID
+    function findRP(empId) {
+      const id = String(empId || '').trim();
+      return roster.find(p => String(p.empId).trim() === id);
+    }
 
-            // Set the "S" or "P" text
-            cell.value = isSAP ? 'S' : 'P';
+    // 4. Loop through the rows. Data starts at Row 6. Scanning down to Row 200.
+    for (let r = 6; r <= 200; r++) {
+      const idCell = ws.getCell(r, 1); // Col A is 1
+      
+      // Safely extract ID (handles plain text or Excel formulas)
+      let rawId = idCell.value;
+      if (typeof rawId === 'object' && rawId !== null) rawId = rawId.result || rawId.text || '';
+      const empId = String(rawId || '').trim();
 
-            // Set the Background Color (ARGB Hex format: FF + RRGGBB)
-            cell.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { arg: isSAP ? 'FFFF7C80' : 'FFFFFF00' } // Red or Yellow
-            };
+      if (!empId) continue;
 
-            // Ensure the text is bold and centered
-            cell.font = { bold: true, color: { arg: 'FF000000' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      const rp = findRP(empId);
+      if (!rp) continue;
+
+      // Clear existing calendar days for this person (Col 10 to Col 374)
+      for (let c = 10; c <= 374; c++) {
+        const cell = ws.getCell(r, c);
+        cell.value = null;
+        cell.fill = { type: 'pattern', pattern: 'none' }; 
+      }
+
+      // Paint the Leaves onto the Calendar
+      if (rp.leaves && rp.leaves.length > 0) {
+        for (const lv of rp.leaves) {
+          let cur = new Date(lv.start + 'T00:00:00');
+          let end = new Date(lv.end + 'T00:00:00');
+
+          while (cur <= end) {
+            const key = cur.toISOString().slice(0, 10);
+            const c = dateToCol[key];
+
+            if (c !== undefined) {
+              const cell = ws.getCell(r, c);
+              const isSAP = (lv.type === 'Applied on SAP');
+
+              // Set the "S" or "P" text
+              cell.value = isSAP ? 'S' : 'P';
+
+              // FIXED: Changed 'arg' to 'argb'
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: isSAP ? 'FFFF7C80' : 'FFFFFF00' } // Red or Yellow
+              };
+
+              // FIXED: Changed 'arg' to 'argb'
+              cell.font = { bold: true, color: { argb: 'FF000000' } };
+              cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            }
+            cur.setDate(cur.getDate() + 1); // Move to next day
           }
-          cur.setDate(cur.getDate() + 1); // Move to next day
         }
       }
     }
+
+    // 5. Trigger the download!
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Master-Operations-Roster-2026.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast('Exported successfully!', 'success');
+
+  } catch (error) {
+    // If it ever fails again, it will pop up an alert telling us exactly why!
+    console.error("Excel Export Error:", error);
+    alert("Error generating Excel: " + error.message);
   }
-
-  // 5. Trigger the download!
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'Master-Operations-Roster-2026.xlsx';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  showToast('Exported successfully!', 'success');
 }
-
 // TURN THE ENGINE ON:
 loadFromGitHub();
 
