@@ -1,10 +1,3 @@
-I see exactly what is causing the issue! You have a tiny mix-up between JavaScript syntax and JSON syntax.
-If you pasted that exact text into your data.json file on GitHub, the system will fail to read it because it is not strictly valid JSON. Specifically:
- 1. Roster: needs to be lowercase and wrapped in double quotes: "roster": (This is because your HTML script is specifically looking for json.roster).
- 2. A .json file cannot contain variable declarations like let roster = rosterData.roster; at the bottom.
- 3. The entire file must be wrapped in a single set of opening and closing curly braces {}.
-Here is the **exact, copy-pasteable text** for your data.json file. Completely overwrite your current GitHub data.json file with this:
-```json
 {
   "roster": [
     {
@@ -1079,5 +1072,3 @@ Here is the **exact, copy-pasteable text** for your data.json file. Completely o
     }
   ]
 }
-
-```
