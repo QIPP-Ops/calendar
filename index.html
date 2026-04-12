@@ -678,13 +678,26 @@ function exportToExcel() {
 
   // ── Operation ─────────────────────────────────────────
   XLSX.utils.book_append_sheet(wb1, makeSheet(
+    roster.map(p => ({
+      id:         p.empId  || '',
+      section:    'Operation',
+      area:       p.crew   || '',
+      position:   p.role   || '',
+      totalLeave: 30,
+      name:       p.name
+    }))
+  ), 'Operation');
 
-  // ── BOOT ─────────────────────────────────────────────────────
-  window.addEventListener('scroll', () => {
-    document.querySelector('.acwa-navbar').classList.toggle('scrolled', window.scrollY > 50);
-  });
+  XLSX.writeFile(wb1, 'AnnualLeave_2026.xlsx');
 
-  window.onload = loadFromGitHub;
+} // ← closes exportToExcel()
+
+// ── BOOT ─────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.querySelector('.acwa-navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+window.onload = loadFromGitHub;
 </script>
 </body>
 </html>
