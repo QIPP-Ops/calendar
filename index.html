@@ -399,7 +399,70 @@
       ? `<span class="text-red-600 font-bold">${count} schedule conflicts detected.</span>`
       : `<span class="text-green-600 font-bold">No conflicts detected. ${roster.length} people loaded.</span>`;
   }
+// ── AUTO-SCHEDULER (HIDDEN ADMIN FEATURE) ────────────────────
+  function unlockAutoScheduler() {
+    requirePin(() => {
+      // Unhide the magic wand buttons
+      document.querySelectorAll('.suggest-btn').forEach(b => b.style.display = 'inline-block');
+      showToast('Admin Mode: Auto-Scheduler Unlocked!', 'success');
+    });
+  }
 
+  function suggestLeave(personId) {
+    const target = roster.find(x => x.id === personId);
+    if (!target) return;
+
+    // 1. Find everyone else in the exact same Crew AND Role
+    const peers = roster.filter(x => x.id !== personId && x.crew === target.crew && x.role === target.role);
+
+    // 2. Map out every single day that is currently taken by a peer
+    let badDates = new Set();
+    peers.forEach(peer => {
+      peer.leaves.forEach(lv => {
+        let s = new Date(lv.start).getTime();
+        let e = new Date(lv.end).getTime();
+        for (let d = s; d <= e; d += 86400000) badDates.add(d); // Add each day to the set
+      });
+    });
+
+    // 3. Search for a 14-day gap starting from April 1st, 2026
+    let startSearch = new Date('2026-04-01').getTime();
+    let endSearch   = new Date('2026-12-15').getTime(); // Leave 15 days at the end of the year
+    let bestStart   = null;
+
+    for (let d = startSearch; d <= endSearch; d += 86400000) {
+      let hasConflict = false;
+      // Check the next 14 days from this start date
+      for (let i = 0; i < 14; i++) {
+        if (badDates.has(d + (i * 86400000))) {
+          hasConflict = true;
+          break;
+        }
+      }
+      if (!hasConflict) {
+        bestStart = d;
+        break;
+      }
+    }
+
+    // 4. Apply the suggestion
+    if (bestStart) {
+      const suggestedStart = new Date(bestStart).toISOString().split('T')[0];
+      const suggestedEnd   = new Date(bestStart + (13 * 86400000)).toISOString().split('T')[0];
+      
+      handleEditPerson(personId); // Open their modal
+      
+      // Slight delay to ensure modal is rendered before injecting values
+      setTimeout(() => {
+        document.getElementById('edit-start').value = suggestedStart;
+        document.getElementById('edit-end').value   = suggestedEnd;
+        checkModalConflicts(); // Trigger the conflict check just to be safe
+        showToast('Found optimal 14-day window!', 'success');
+      }, 50);
+    } else {
+      alert(`No clear 14-day window found for Crew ${target.crew} ${target.role}s in 2026.`);
+    }
+  }
   // ── RENDER ───────────────────────────────────────────────────
   function renderAll() { calculateConflicts(); renderCards(); renderTimeline(); }
 
@@ -435,13 +498,18 @@
               <span class="font-semibold text-gray-800">${formatNoYear(l.end)}</span>
             </div>
           </div>`).join('');
+        // Check if this card belongs to Mohammad Algarni
+        const isAlgarni = p.name.toLowerCase().includes('algarni');
+        const secretTrigger = isAlgarni ? `ondblclick="unlockAutoScheduler()"` : '';
+        const cursorClass   = isAlgarni ? 'cursor-pointer ring-4 ring-purple-300' : ''; // Adds a slight highlight so you know where to click
+
         grid.innerHTML += `
           <div class="sap-card">
             <div class="sap-card-top" style="background-color:#${hex}"></div>
             ${conflictBadge}
             <div class="p-4 pt-5 relative">
               <div class="flex items-center space-x-3 mb-3">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background-color:#${hex}">${getInitials(p.name)}</div>
+                <div ${secretTrigger} class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${cursorClass} transition" style="background-color:#${hex}" title="${isAlgarni ? 'Double click for Admin Tools' : ''}">${getInitials(p.name)}</div>
                 <div>
                   <h3 class="font-bold text-sm" style="color:#${hex}">${p.name}</h3>
                   <p class="text-xs text-gray-500">${p.role}</p>
@@ -449,6 +517,7 @@
               </div>
               ${leavesHtml}
               <div class="flex justify-end mt-2 space-x-1">
+                <button onclick="suggestLeave(${p.id})" class="suggest-btn text-gray-400 hover:text-purple-600 transition" style="display:none;" title="Auto-Suggest Best Dates">✨</button>
                 <button onclick="handleEditPerson(${p.id})" class="text-gray-400 hover:text-blue-600 transition" title="Edit">&#9998;</button>
                 <button onclick="handleDeletePerson(${p.id})" class="text-gray-400 hover:text-red-600 transition" title="Delete">&#128465;</button>
               </div>
