@@ -1078,13 +1078,7 @@
       "crew": "General",
       "role": "CCR Operator",
       "color": "crew-lightblue",
-      "leaves": [
-        {
-          "start": "2026-04-01",
-          "end": "2026-04-14",
-          "type": "Applied on SAP"
-        }
-      ],
+      "leaves": [],
       "conflict": false,
       "conflictWith": []
     }
