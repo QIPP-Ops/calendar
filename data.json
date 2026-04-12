@@ -12,7 +12,9 @@
           "end": "2026-05-02",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 2,
@@ -26,7 +28,9 @@
           "end": "2026-05-07",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 3,
@@ -40,7 +44,9 @@
           "end": "2026-05-14",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 4,
@@ -54,7 +60,9 @@
           "end": "2026-06-19",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 5,
@@ -68,7 +76,9 @@
           "end": "2026-06-11",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 6,
@@ -82,7 +92,9 @@
           "end": "2026-06-04",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 7,
@@ -96,7 +108,9 @@
           "end": "2026-06-10",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 8,
@@ -110,7 +124,9 @@
           "end": "2026-06-23",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 9,
@@ -124,7 +140,9 @@
           "end": "2026-06-15",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 10,
@@ -138,7 +156,9 @@
           "end": "2026-06-14",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 11,
@@ -152,7 +172,9 @@
           "end": "2026-06-28",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 12,
@@ -166,7 +188,9 @@
           "end": "2026-08-06",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 13,
@@ -180,6 +204,10 @@
           "end": "2026-08-10",
           "type": "Applied on SAP"
         }
+      ],
+      "conflict": true,
+      "conflictWith": [
+        "Saleh Mohammed Al Amri"
       ]
     },
     {
@@ -194,13 +222,15 @@
           "end": "2026-08-18",
           "type": "Applied on SAP"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 15,
       "name": "Zaid Almarri",
       "crew": "A",
-      "role": "SiCE",
+      "role": "Shift in Charge",
       "color": "crew-red",
       "leaves": [
         {
@@ -208,7 +238,9 @@
           "end": "2026-08-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 16,
@@ -222,7 +254,9 @@
           "end": "2026-09-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 17,
@@ -236,7 +270,9 @@
           "end": "2026-09-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 18,
@@ -250,7 +286,9 @@
           "end": "2026-10-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 19,
@@ -264,7 +302,9 @@
           "end": "2026-10-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 20,
@@ -278,7 +318,9 @@
           "end": "2026-11-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 21,
@@ -292,7 +334,9 @@
           "end": "2026-11-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 22,
@@ -306,7 +350,9 @@
           "end": "2026-12-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 23,
@@ -320,7 +366,9 @@
           "end": "2026-08-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 24,
@@ -334,7 +382,9 @@
           "end": "2026-09-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 25,
@@ -348,7 +398,9 @@
           "end": "2026-08-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 26,
@@ -362,7 +414,9 @@
           "end": "2026-09-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 27,
@@ -376,7 +430,9 @@
           "end": "2026-10-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 28,
@@ -390,7 +446,9 @@
           "end": "2026-10-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 29,
@@ -404,7 +462,9 @@
           "end": "2026-11-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 30,
@@ -418,7 +478,9 @@
           "end": "2026-11-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 31,
@@ -432,7 +494,9 @@
           "end": "2026-12-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 32,
@@ -446,7 +510,9 @@
           "end": "2026-08-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 33,
@@ -460,7 +526,9 @@
           "end": "2026-09-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 34,
@@ -474,7 +542,9 @@
           "end": "2026-09-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 35,
@@ -488,7 +558,9 @@
           "end": "2026-10-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 36,
@@ -502,7 +574,9 @@
           "end": "2026-08-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 37,
@@ -516,7 +590,9 @@
           "end": "2026-09-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 38,
@@ -530,7 +606,9 @@
           "end": "2026-09-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 39,
@@ -544,7 +622,9 @@
           "end": "2026-10-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 40,
@@ -558,7 +638,9 @@
           "end": "2026-10-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 41,
@@ -572,7 +654,9 @@
           "end": "2026-11-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 42,
@@ -586,7 +670,9 @@
           "end": "2026-11-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 43,
@@ -600,7 +686,9 @@
           "end": "2026-12-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 44,
@@ -614,6 +702,10 @@
           "end": "2026-08-15",
           "type": "Planned"
         }
+      ],
+      "conflict": true,
+      "conflictWith": [
+        "Lakshmy Prasad"
       ]
     },
     {
@@ -628,7 +720,9 @@
           "end": "2026-09-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 46,
@@ -642,7 +736,9 @@
           "end": "2026-09-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 47,
@@ -656,7 +752,9 @@
           "end": "2026-10-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 48,
@@ -670,7 +768,9 @@
           "end": "2026-10-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 49,
@@ -684,7 +784,9 @@
           "end": "2026-11-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 50,
@@ -698,7 +800,9 @@
           "end": "2026-11-30",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 51,
@@ -712,7 +816,9 @@
           "end": "2026-12-15",
           "type": "Planned"
         }
-      ]
+      ],
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 52,
@@ -720,7 +826,9 @@
       "crew": "General",
       "role": "Operator",
       "color": "crew-lightblue",
-      "leaves": []
+      "leaves": [],
+      "conflict": false,
+      "conflictWith": []
     }
   ]
 }
