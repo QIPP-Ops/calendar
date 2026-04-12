@@ -558,23 +558,126 @@
   function closeModal() { document.getElementById('edit-modal').close(); }
 
   // ── EXCEL EXPORT ─────────────────────────────────────────────
-  function exportToExcel() {
-    calculateConflicts();
-    const rows = [];
-    roster.forEach(p => p.leaves.forEach(l => rows.push({
-      Name:p.name, Crew:p.crew, Role:p.role,
-      Start:l.start, End:l.end, Type:l.type,
-      Conflict:p.conflict?'YES':'NO', _hex:crewColorMap[p.color]
-    })));
-    const ws = XLSX.utils.json_to_sheet(rows.map(({_hex,...r})=>r));
-    rows.forEach((r,i) => {
-      const c = XLSX.utils.encode_cell({r:i+1,c:0});
-      if (ws[c]) ws[c].s = {fill:{fgColor:{rgb:r._hex}},font:{bold:true}};
-    });
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leave Planner');
-    XLSX.writeFile(wb, 'Leave-Planner-2026.xlsx');
+  // ── EXCEL EXPORT ────────────────────────────────────────────
+function exportToExcel() {
+  calculateConflicts();
+
+  // ── Helper: lookup leave dates for a name from roster ──
+  function getLeaves(name) {
+    const n = name ? name.toLowerCase().trim() : '';
+    const found = roster.find(p => p.name.toLowerCase().trim() === n
+      || (p.fullName && p.fullName.toLowerCase().trim() === n));
+    if (!found || !found.leaves || !found.leaves.length) return { start: '', end: '', type: '' };
+    // Return the first leave period
+    return { start: found.leaves[0].start, end: found.leaves[0].end, type: found.leaves[0].type };
   }
+
+  // ════════════════════════════════════════════════════════
+  // FILE 1 — Annual Leave 2026 (matching your template)
+  // ════════════════════════════════════════════════════════
+  const wb1 = XLSX.utils.book_new();
+
+  // ── Sheet builder helper ──────────────────────────────
+  function makeSheet(people) {
+    // people = array of { id, section, area, position, totalLeave, name }
+    const headers = ['ID','Section','Area','Position','Total Planned Leave','Name','Leave Start','Leave End','Leave Type'];
+    const rows = [headers];
+    people.forEach(p => {
+      const lv = getLeaves(p.name);
+      rows.push([
+        p.id || '',
+        p.section || '',
+        p.area || '',
+        p.position || '',
+        p.totalLeave || 30,
+        p.name || '',
+        lv.start,
+        lv.end,
+        lv.type
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // Style header row
+    ws['!cols'] = [8,14,12,18,8,28,14,14,18].map(w => ({ wch: w }));
+    return ws;
+  }
+
+  // ── Plant Management ──────────────────────────────────
+  XLSX.utils.book_append_sheet(wb1, makeSheet([
+    { id:'', section:'Plant Management', area:'QIPP', position:'PGM',         name:'Meshal Sonbul' },
+    { id:'', section:'Plant Management', area:'QIPP', position:'OM',          name:'Bander AlDogaish' },
+    { id:'', section:'Plant Management', area:'QIPP', position:'MM',          name:'Talib Hussain' },
+    { id:'', section:'Plant Management', area:'QIPP', position:'HR',          name:'Abdulaziz AlTaweel' },
+    { id:'', section:'Plant Management', area:'QIPP', position:'Secretary',   name:'Amira Alfasi' },
+  ]), 'Plant Management');
+
+  // ── Technical ─────────────────────────────────────────
+  XLSX.utils.book_append_sheet(wb1, makeSheet([
+    { section:'Technical', area:'QIPP', position:'Admin Supervisor',    name:'Mohammaed Algannas' },
+    { section:'Technical', area:'QIPP', position:'IT Officer',          name:'Mohammed Saban' },
+    { section:'Technical', area:'QIPP', position:'Performance Eng',    name:'Chandra Varanasi' },
+    { section:'Technical', area:'QIPP', position:'Sr Tech Support',    name:'Mahmoud Kady' },
+    { section:'Technical', area:'QIPP', position:'Store Supervisor',   name:'Saleh Balhareth' },
+    { section:'Technical', area:'QIPP', position:'Store Keeper',       name:'Felynor Atiga' },
+    { section:'Technical', area:'QIPP', position:'Store Keeper',       name:'Muhammad Abdul Raheem' },
+  ]), 'Technical');
+
+  // ── Maintenance MMD ───────────────────────────────────
+  XLSX.utils.book_append_sheet(wb1, makeSheet([
+    { id:3831, section:'MMD', area:'QIPP',           position:'Section Head',     name:'Turki Alrashed' },
+    { id:2323, section:'MMD', area:'QIPP',           position:'Mechanical Eng',   name:'SHAMSE ALAM' },
+    { id:3069, section:'MECH', area:'Power Block',   position:'Mech Eng',         name:'Saad Al Hamed' },
+    { id:3862, section:'MECH', area:'BOP',           position:'Mech Eng',         name:'Yousef AlZaydi' },
+    { id:2262, section:'MECH', area:'BOP',           position:'Supervisor',       name:'Abdullah Alrobia' },
+    { id:3147, section:'MECH', area:'BOP/Workshop',  position:'Supervisor',       name:'Mohammed AlRamadhan' },
+    { id:3888, section:'MECH', area:'Power Block',   position:'Supervisor',       name:'Khaled Alsedan' },
+    { id:4029, section:'MECH', area:'BOP',           position:'Supervisor',       name:'Abdullah Almuhana Abalkhail' },
+    { id:2230, section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Mohammed Alhmadi' },
+    { id:3805, section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Yasser Sendi' },
+    { id:2360, section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Ali Almari' },
+    { id:3642, section:'MECH', area:'Power Block',   position:'Mech Tech',        name:'Ali Alhadab' },
+    { id:'',   section:'MECH', area:'Power Block',   position:'Mech Tech',        name:'Satayanarayana' },
+    { id:'',   section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Pankaj Kumar' },
+    { id:'',   section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Muhamed Alam' },
+    { id:'',   section:'MECH', area:'BOP',           position:'Mech Sup',         name:'Vignash' },
+    { id:'',   section:'MECH', area:'Power Block',   position:'Mech Eng',         name:'Raj Twari' },
+  ]), 'Maintenance MMD');
+
+  // ── Maintenance EMD ───────────────────────────────────
+  XLSX.utils.book_append_sheet(wb1, makeSheet([
+    { id:3755,   section:'EMD', area:'QIPP', position:'Section Head Elec',  name:'Mohammed Eid Alzaidi' },
+    { id:500431, section:'EMD', area:'QIPP', position:'Electrical Eng',     name:'Ashok Kumar Kolapalli' },
+    { id:'',     section:'EMD', area:'QIPP', position:'Electrical Sup',     name:'Mohammed Faqihi' },
+    { id:2530,   section:'EMD', area:'QIPP', position:'Electrical Sup',     name:'Imran Ali Qasim Ali' },
+    { id:3684,   section:'EMD', area:'QIPP', position:'Electrical Sup',     name:'Salih' },
+    { id:2226,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Dhanfordjim Ebreo' },
+    { id:3512,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Nasser Dumaythan Almutairi' },
+    { id:3738,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Mohammed Ghalti' },
+    { id:500434, section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Suresh Raj' },
+    { id:2241,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Mujtba Shaikh' },
+    { id:'',     section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Fahad Alqarni' },
+  ]), 'Maintenance EMD');
+
+  // ── Maintenance IMD ───────────────────────────────────
+  XLSX.utils.book_append_sheet(wb1, makeSheet([
+    { id:3369, section:'IMD', area:'ST/BOP',  position:'SH IC',      name:'Osama Al Amri' },
+    { id:3355, section:'IMD', area:'ST/BOP',  position:'IC Spec',    name:'BAHA JABER' },
+    { id:3893, section:'IMD', area:'GT/DCS',  position:'IC Eng',     name:'Fahad Alnazi' },
+    { id:2495, section:'IMD', area:'ST/BOP',  position:'IC Super',   name:'MURGAN' },
+    { id:2054, section:'IMD', area:'GT/DCS',  position:'IC Super',   name:'IMRAN' },
+    { id:2587, section:'IMD', area:'GT',      position:'IC Tech',    name:'ASHRAF' },
+    { id:2598, section:'IMD', area:'GT',      position:'IC Tech',    name:'MUNEER' },
+    { id:2134, section:'IMD', area:'GT',      position:'IC Tech',    name:'NADEEM' },
+    { id:4002, section:'IMD', area:'ST',      position:'IC Tech',    name:'FAISAL' },
+    { id:3983, section:'IMD', area:'ST',      position:'IC Tech',    name:'ALI' },
+    { id:2953, section:'IMD', area:'ST',      position:'IC Tech',    name:'A. FARDAN' },
+    { id:3366, section:'IMD', area:'ST',      position:'IC Tech',    name:'A. Khalifah' },
+    { id:3643, section:'IMD', area:'GT',      position:'IC Tech',    name:'khalid' },
+    { id:2639, section:'IMD', area:'ST',      position:'IC Tech',    name:'Saddam' },
+  ]), 'Maintenance IMD');
+
+  // ── Operation ─────────────────────────────────────────
+  XLSX.utils.book_append_sheet(wb1, makeSheet(
 
   // ── BOOT ─────────────────────────────────────────────────────
   window.addEventListener('scroll', () => {
