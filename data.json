@@ -618,6 +618,11 @@
       "color": "crew-lightblue",
       "leaves": [
         {
+          "start": "2026-05-07",
+          "end": "2026-06-14",
+          "type": "Applied on SAP"
+        },
+        {
           "start": "2026-10-01",
           "end": "2026-10-15",
           "type": "Planned"
