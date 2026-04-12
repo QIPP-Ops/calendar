@@ -36,7 +36,7 @@
       "id": 3,
       "name": "Juma Khan",
       "crew": "General",
-      "role": "Operator",
+      "role": "CCR Operator",
       "color": "crew-green",
       "leaves": [
         {
@@ -125,8 +125,10 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Norbie Cruz"
+      ]
     },
     {
       "id": 9,
@@ -628,8 +630,10 @@
           "type": "Planned"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Waleed Fayad"
+      ]
     },
     {
       "id": 40,
