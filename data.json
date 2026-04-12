@@ -833,9 +833,15 @@
       "id": 52,
       "name": "Mohammad Algarni",
       "crew": "General",
-      "role": "Operator",
+      "role": "CCR Operator",
       "color": "crew-lightblue",
-      "leaves": [],
+      "leaves": [
+        {
+          "start": "2026-09-21",
+          "end": "2026-10-06",
+          "type": "Applied on SAP"
+        }
+      ],
       "conflict": false,
       "conflictWith": []
     }
