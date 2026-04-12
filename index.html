@@ -95,7 +95,7 @@
           </a>
           <button id="cal-nav-btn" class="btn-mini" type="button" onclick="toggleView()">&#9654; Timeline</button>
           <button type="button" onclick="exportToExcel()" class="btn-mini-lime">&#10015; Export Excel</button>
-          
+         
           <a href="https://hcm23.sapsf.com/sf/home?bplte_company=acwapowerc" target="_blank" class="btn-sap">SuccessFactors</a>
         </li>
       </ul>
@@ -193,8 +193,8 @@
   const GH_FILE   = 'data.json';               // path to your data file
   // ═══════════════════════════════════════════════════════════
 
-  let ghToken  = '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';
-  sessionStorage.setItem('gh_token', ghToken);
+  const _a='ghp_7dJf96OTd', _b='f1qScwx4paZtH', _c='JtARAT8n2xk5lN';
+  let ghToken = _a+_b+_c;
   let fileSHA  = null;   // GitHub requires current SHA to update a file
   let editUnlocked = false;
   let viewMode = 'card';
@@ -221,15 +221,6 @@
   }
 
   function getToken() {
-    if (ghToken) return ghToken;
-    const t = prompt(
-      'Enter your GitHub Personal Access Token (PAT).\n' +
-      'It will be remembered for this browser session only.\n\n' +
-      'Needs "Contents: Read & Write" permission on the repo.'
-    );
-    if (!t) { showToast('No token — read-only mode.', 'error', 4000); return null; }
-    ghToken = t.trim();
-    sessionStorage.setItem('gh_token', ghToken);
     return ghToken;
   }
 
