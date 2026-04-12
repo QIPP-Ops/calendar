@@ -1,0 +1,726 @@
+{
+  "roster": [
+    {
+      "id": 1,
+      "name": "Izhar Ali",
+      "crew": "C",
+      "role": "Local Operator",
+      "color": "crew-lightviolet",
+      "leaves": [
+        {
+          "start": "2026-04-21",
+          "end": "2026-05-02",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Purushothaman",
+      "crew": "A",
+      "role": "Local Operator",
+      "color": "crew-lightviolet",
+      "leaves": [
+        {
+          "start": "2026-04-27",
+          "end": "2026-05-07",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Juma Khan",
+      "crew": "General",
+      "role": "Operator",
+      "color": "crew-green",
+      "leaves": [
+        {
+          "start": "2026-04-29",
+          "end": "2026-05-14",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Mustafa Salem",
+      "crew": "D",
+      "role": "SiCE",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-05-19",
+          "end": "2026-06-19",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Ahmed Alsaqoor",
+      "crew": "D",
+      "role": "CCR Operator",
+      "color": "crew-lightviolet",
+      "leaves": [
+        {
+          "start": "2026-05-19",
+          "end": "2026-06-11",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Syed Shahnawaz Ahmed",
+      "crew": "A",
+      "role": "Supervisor",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-05-20",
+          "end": "2026-06-04",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Abdul Hameed",
+      "crew": "General",
+      "role": "Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-05-20",
+          "end": "2026-06-10",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Waleed Fayad",
+      "crew": "C",
+      "role": "CCR Operator",
+      "color": "crew-green",
+      "leaves": [
+        {
+          "start": "2026-05-31",
+          "end": "2026-06-23",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Mark Ramirez",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-lightviolet",
+      "leaves": [
+        {
+          "start": "2026-05-31",
+          "end": "2026-06-15",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Ahmed Fathy",
+      "crew": "A",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-06-06",
+          "end": "2026-06-14",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Moustafa Elansari",
+      "crew": "C",
+      "role": "Supervisor",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-06-16",
+          "end": "2026-06-28",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Veera Prasad",
+      "crew": "D",
+      "role": "Supervisor",
+      "color": "crew-green",
+      "leaves": [
+        {
+          "start": "2026-07-06",
+          "end": "2026-08-06",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Lakshmy Prasad",
+      "crew": "D",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-07-14",
+          "end": "2026-08-10",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Prathapan",
+      "crew": "B",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-07-22",
+          "end": "2026-08-18",
+          "type": "Applied on SAP"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Zaid Almarri",
+      "crew": "A",
+      "role": "SiCE",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-08-01",
+          "end": "2026-08-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Sami Hamdan",
+      "crew": "A",
+      "role": "CCR Operator",
+      "color": "crew-yellow",
+      "leaves": [
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Fawaz Al Qahtani",
+      "crew": "A",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-09-16",
+          "end": "2026-09-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Abdulwahab Al-Shehab",
+      "crew": "A",
+      "role": "CCR Operator",
+      "color": "crew-lightviolet",
+      "leaves": [
+        {
+          "start": "2026-10-01",
+          "end": "2026-10-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Shaheer Yousaf",
+      "crew": "A",
+      "role": "CCR Operator",
+      "color": "crew-green",
+      "leaves": [
+        {
+          "start": "2026-10-16",
+          "end": "2026-10-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Mohamed Al Dossary",
+      "crew": "A",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-11-01",
+          "end": "2026-11-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Abdullah Altulayhi",
+      "crew": "A",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-11-16",
+          "end": "2026-11-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Bakr Abdulmajeed",
+      "crew": "A",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-12-01",
+          "end": "2026-12-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Saad Salem Al Hajiri",
+      "crew": "A",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-08-16",
+          "end": "2026-08-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Abdulhadi Mohammed Saleh",
+      "crew": "A",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Abdullah Al Amri",
+      "crew": "B",
+      "role": "SiCE",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-08-01",
+          "end": "2026-08-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Kanaka Naga Srinivasu Kolli",
+      "crew": "B",
+      "role": "Supervisor",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "name": "Ahmed Fawaz",
+      "crew": "B",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-10-01",
+          "end": "2026-10-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Rashed Alhajri",
+      "crew": "B",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-10-16",
+          "end": "2026-10-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "name": "Saravanakumar Madhaiyan",
+      "crew": "B",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-11-01",
+          "end": "2026-11-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "name": "Abdullah Mohiddin Alshahrani",
+      "crew": "B",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-11-16",
+          "end": "2026-11-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "name": "Mohammed Mulhim",
+      "crew": "B",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-12-01",
+          "end": "2026-12-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Mohammed Afnan",
+      "crew": "B",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-08-16",
+          "end": "2026-08-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Abdelaziz Al Harbi",
+      "crew": "B",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Amjad Alruwaytie",
+      "crew": "B",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-09-16",
+          "end": "2026-09-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "name": "Abderahman Al Anezie",
+      "crew": "B",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-10-01",
+          "end": "2026-10-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Alaa Alrefae",
+      "crew": "C",
+      "role": "SiCE",
+      "color": "crew-red",
+      "leaves": [
+        {
+          "start": "2026-08-01",
+          "end": "2026-08-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Abdullah Al Hajri",
+      "crew": "C",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "name": "Yasser Althuiqeb",
+      "crew": "C",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-09-16",
+          "end": "2026-09-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "name": "Norbie Cruz",
+      "crew": "C",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-10-01",
+          "end": "2026-10-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "name": "Khalid Saleh Khalousi",
+      "crew": "C",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-10-16",
+          "end": "2026-10-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "name": "Saad Al Enize",
+      "crew": "C",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-11-01",
+          "end": "2026-11-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "name": "Abderahman Al Baqmi",
+      "crew": "C",
+      "role": "Local Operator",
+      "color": "crew-lightorange",
+      "leaves": [
+        {
+          "start": "2026-11-16",
+          "end": "2026-11-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "name": "Ali Al Qahtani",
+      "crew": "C",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-12-01",
+          "end": "2026-12-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "name": "Saleh Mohammed Al Amri",
+      "crew": "D",
+      "role": "CCR Operator",
+      "color": "crew-yellow",
+      "leaves": [
+        {
+          "start": "2026-08-01",
+          "end": "2026-08-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "name": "Hassan Arshad",
+      "crew": "D",
+      "role": "CCR Operator",
+      "color": "crew-lightblue",
+      "leaves": [
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "name": "Rajesh Muniasamy",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-09-16",
+          "end": "2026-09-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "name": "Mohammed Al Ghamdi",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-10-01",
+          "end": "2026-10-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "name": "Bader AlSubait",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-10-16",
+          "end": "2026-10-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Faris Al Dawasri",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-11-01",
+          "end": "2026-11-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "name": "Mohamed Al Hakami",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-11-16",
+          "end": "2026-11-30",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "name": "Saad Al Shahrani",
+      "crew": "D",
+      "role": "Local Operator",
+      "color": "crew-grey",
+      "leaves": [
+        {
+          "start": "2026-12-01",
+          "end": "2026-12-15",
+          "type": "Planned"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "name": "Mohammad Algarni",
+      "crew": "General",
+      "role": "Operator",
+      "color": "crew-lightblue",
+      "leaves": []
+    }
+  ]
+}
