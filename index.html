@@ -558,138 +558,278 @@
   function closeModal() { document.getElementById('edit-modal').close(); }
 
   // ── EXCEL EXPORT ─────────────────────────────────────────────
-  // ── EXCEL EXPORT ────────────────────────────────────────────
-function exportToExcel() {
+  function exportToExcel() {
   calculateConflicts();
 
-  // ── Helper: lookup leave dates for a name from roster ──
-  function getLeaves(name) {
-    const n = name ? name.toLowerCase().trim() : '';
-    const found = roster.find(p => p.name.toLowerCase().trim() === n
-      || (p.fullName && p.fullName.toLowerCase().trim() === n));
-    if (!found || !found.leaves || !found.leaves.length) return { start: '', end: '', type: '' };
-    // Return the first leave period
-    return { start: found.leaves[0].start, end: found.leaves[0].end, type: found.leaves[0].type };
+  const MONTH_DAYS  = [31,28,31,30,31,30,31,31,30,31,30,31];
+
+  // Build flat array of all 365 days in 2026
+  const ALL_DAYS = [];
+  for (let m = 0; m < 12; m++)
+    for (let d = 1; d <= MONTH_DAYS[m]; d++)
+      ALL_DAYS.push(new Date(2026, m, d));
+
+  function findRP(empId, name) {
+    if (empId) {
+      const r = roster.find(p => String(p.empId) === String(empId));
+      if (r) return r;
+    }
+    if (name) {
+      const n = name.toLowerCase().trim();
+      return roster.find(p =>
+        p.name.toLowerCase().trim() === n ||
+        (p.fullName || '').toLowerCase().trim() === n
+      );
+    }
+    return null;
   }
 
-  // ════════════════════════════════════════════════════════
-  // FILE 1 — Annual Leave 2026 (matching your template)
-  // ════════════════════════════════════════════════════════
-  const wb1 = XLSX.utils.book_new();
+  function leaveOn(rp, date) {
+    if (!rp || !rp.leaves) return null;
+    for (const l of rp.leaves) {
+      const s = new Date(l.start + 'T00:00:00');
+      const e = new Date(l.end   + 'T00:00:00');
+      if (date >= s && date <= e) return l.type;
+    }
+    return null;
+  }
 
-  // ── Sheet builder helper ──────────────────────────────
-  function makeSheet(people) {
-    // people = array of { id, section, area, position, totalLeave, name }
-    const headers = ['ID','Section','Area','Position','Total Planned Leave','Name','Leave Start','Leave End','Leave Type'];
-    const rows = [headers];
-    people.forEach(p => {
-      const lv = getLeaves(p.name);
-      rows.push([
-        p.id || '',
-        p.section || '',
-        p.area || '',
-        p.position || '',
-        p.totalLeave || 30,
-        p.name || '',
-        lv.start,
-        lv.end,
-        lv.type
-      ]);
+  // ── EXACT colors extracted from your template ──────────────
+  const HDR_BG  = { patternType:'solid', fgColor:{ rgb:'E4DABE' } };
+  const SAP_CLR = { patternType:'solid', fgColor:{ rgb:'FF7C80' } };  // Applied on SAP
+  const PLN_CLR = { patternType:'solid', fgColor:{ rgb:'FFFF00' } };  // Planned
+
+  const hdrFont   = { bold:true, sz:11 };
+  const dayFont   = { sz:8 };
+  const dataFont  = { sz:11 };
+  const nameFont  = { sz:10 };
+
+  function buildSheet(title, people) {
+    // ── Row 0: Title cell (A1) + month date values ────────────
+    const row0 = [
+      { v: title, t:'s', s:{ font: hdrFont, fill: HDR_BG } },
+      '','','','',''   // A1:F1 — merged below
+    ];
+    for (let m = 0; m < 12; m++) {
+      // First cell of each month = actual Date object (matches template format)
+      row0.push({ v: new Date(2026, m, 1), t:'d',
+                  s:{ font: hdrFont, fill: HDR_BG,
+                      numFmt: 'mmm-yy',
+                      alignment:{ horizontal:'center' } } });
+      for (let d = 1; d < MONTH_DAYS[m]; d++) row0.push('');
+    }
+
+    // ── Row 1: Column headers + day numbers ───────────────────
+    const hStyle = { font: hdrFont, fill: HDR_BG };
+    const row1 = [
+      { v:'ID',                  s: hStyle },
+      { v:'Section',             s: hStyle },
+      { v:'Area',                s: hStyle },
+      { v:'Position',            s: hStyle },
+      { v:'Total planned leave', s: hStyle },
+      { v:'Names',               s: hStyle }
+    ];
+    for (let m = 0; m < 12; m++)
+      for (let d = 1; d <= MONTH_DAYS[m]; d++)
+        row1.push({ v: d, s:{ font: dayFont, fill: HDR_BG,
+                               alignment:{ horizontal:'center' } } });
+
+    // ── Data rows ─────────────────────────────────────────────
+    const dataRows = people.map(emp => {
+      const rp = findRP(emp.empId, emp.name);
+      const cs = { font: dataFont };
+      const row = [
+        { v: emp.empId      || '', s: cs },
+        { v: emp.section    || '', s: cs },
+        { v: emp.area       || 'QIPP', s: cs },
+        { v: emp.position   || '', s: cs },
+        { v: emp.totalLeave || 30, s:{ font: dataFont, alignment:{ horizontal:'center' } } },
+        { v: emp.name,             s:{ font: nameFont } }
+      ];
+      ALL_DAYS.forEach(date => {
+        const lt = leaveOn(rp, date);
+        if      (lt === 'Applied on SAP') row.push({ v:'', s:{ fill: SAP_CLR } });
+        else if (lt === 'Planned')        row.push({ v:'', s:{ fill: PLN_CLR } });
+        else                              row.push('');
+      });
+      return row;
     });
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    // Style header row
-    ws['!cols'] = [8,14,12,18,8,28,14,14,18].map(w => ({ wch: w }));
+
+    const ws = XLSX.utils.aoa_to_sheet([row0, row1, ...dataRows]);
+
+    // ── Merges ────────────────────────────────────────────────
+    ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:5} }]; // A1:F1 title merge
+    let startCol = 6;
+    for (let m = 0; m < 12; m++) {
+      ws['!merges'].push({ s:{r:0,c:startCol}, e:{r:0,c:startCol+MONTH_DAYS[m]-1} });
+      startCol += MONTH_DAYS[m];
+    }
+
+    // ── Column widths (exact from template) ───────────────────
+    ws['!cols'] = [
+      { wch:9.57 },   // A - ID
+      { wch:9.57 },   // B - Section
+      { wch:8    },   // C - Area
+      { wch:9.57 },   // D - Position
+      { wch:17.14 },  // E - Total Leave
+      { wch:27.57 },  // F - Names
+      ...Array(365).fill({ wch: 2.14 })
+    ];
+
+    // ── Row heights (exact from template) ─────────────────────
+    ws['!rows'] = [
+      { hpt: 21 },   // Row 1 - title
+      { hpt: 15 },   // Row 2 - headers
+      ...people.map(() => ({}))  // data rows — default height
+    ];
+
     return ws;
   }
 
-  // ── Plant Management ──────────────────────────────────
-  XLSX.utils.book_append_sheet(wb1, makeSheet([
-    { id:'', section:'Plant Management', area:'QIPP', position:'PGM',         name:'Meshal Sonbul' },
-    { id:'', section:'Plant Management', area:'QIPP', position:'OM',          name:'Bander AlDogaish' },
-    { id:'', section:'Plant Management', area:'QIPP', position:'MM',          name:'Talib Hussain' },
-    { id:'', section:'Plant Management', area:'QIPP', position:'HR',          name:'Abdulaziz AlTaweel' },
-    { id:'', section:'Plant Management', area:'QIPP', position:'Secretary',   name:'Amira Alfasi' },
-  ]), 'Plant Management');
+  const wb = XLSX.utils.book_new();
 
-  // ── Technical ─────────────────────────────────────────
-  XLSX.utils.book_append_sheet(wb1, makeSheet([
-    { section:'Technical', area:'QIPP', position:'Admin Supervisor',    name:'Mohammaed Algannas' },
-    { section:'Technical', area:'QIPP', position:'IT Officer',          name:'Mohammed Saban' },
-    { section:'Technical', area:'QIPP', position:'Performance Eng',    name:'Chandra Varanasi' },
-    { section:'Technical', area:'QIPP', position:'Sr Tech Support',    name:'Mahmoud Kady' },
-    { section:'Technical', area:'QIPP', position:'Store Supervisor',   name:'Saleh Balhareth' },
-    { section:'Technical', area:'QIPP', position:'Store Keeper',       name:'Felynor Atiga' },
-    { section:'Technical', area:'QIPP', position:'Store Keeper',       name:'Muhammad Abdul Raheem' },
+  // ... (all your sheet definitions stay exactly the same as before)
+  // ── PLANT MANAGEMENT ──
+  XLSX.utils.book_append_sheet(wb, buildSheet('Plant Managment Annual Leave 2026', [
+    { empId:'2541',   section:'Plant Mgmt', position:'PGM',       name:'Meshal Sonbul' },
+    { empId:'3167',   section:'Plant Mgmt', position:'OM',        name:'Bander AlDogaish' },
+    { empId:'3861',   section:'Plant Mgmt', position:'MM',        name:'Talib Hussain' },
+    { empId:'',       section:'Plant Mgmt', position:'HR',        name:'Abdulaziz AlTaweel' },
+    { empId:'501463', section:'Plant Mgmt', position:'Secretary', name:'Amira Alfasi' },
+  ]), 'Plant Managment ');
+
+  XLSX.utils.book_append_sheet(wb, buildSheet('Technical Annual Leave 2026', [
+    { empId:'502038', section:'Technical', position:'Admin Supervisor',  name:'Mohammaed Algannas' },
+    { empId:'2992',   section:'Technical', position:'IT Officer',        name:'Mohammed Saban' },
+    { empId:'2096',   section:'Technical', position:'Performance Eng',   name:'Chandra Varanasi' },
+    { empId:'2037',   section:'Technical', position:'Sr Tech Support',   name:'Mahmoud Kady' },
+    { empId:'2893',   section:'Technical', position:'Store Supervisor',  name:'Saleh Balhareth' },
+    { empId:'1531',   section:'Technical', position:'Store Keeper',      name:'Felynor Atiga' },
+    { empId:'501220', section:'Technical', position:'Store Keeper',      name:'Muhammad Abdul Raheem' },
   ]), 'Technical');
 
-  // ── Maintenance MMD ───────────────────────────────────
-  XLSX.utils.book_append_sheet(wb1, makeSheet([
-    { id:3831, section:'MMD', area:'QIPP',           position:'Section Head',     name:'Turki Alrashed' },
-    { id:2323, section:'MMD', area:'QIPP',           position:'Mechanical Eng',   name:'SHAMSE ALAM' },
-    { id:3069, section:'MECH', area:'Power Block',   position:'Mech Eng',         name:'Saad Al Hamed' },
-    { id:3862, section:'MECH', area:'BOP',           position:'Mech Eng',         name:'Yousef AlZaydi' },
-    { id:2262, section:'MECH', area:'BOP',           position:'Supervisor',       name:'Abdullah Alrobia' },
-    { id:3147, section:'MECH', area:'BOP/Workshop',  position:'Supervisor',       name:'Mohammed AlRamadhan' },
-    { id:3888, section:'MECH', area:'Power Block',   position:'Supervisor',       name:'Khaled Alsedan' },
-    { id:4029, section:'MECH', area:'BOP',           position:'Supervisor',       name:'Abdullah Almuhana Abalkhail' },
-    { id:2230, section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Mohammed Alhmadi' },
-    { id:3805, section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Yasser Sendi' },
-    { id:2360, section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Ali Almari' },
-    { id:3642, section:'MECH', area:'Power Block',   position:'Mech Tech',        name:'Ali Alhadab' },
-    { id:'',   section:'MECH', area:'Power Block',   position:'Mech Tech',        name:'Satayanarayana' },
-    { id:'',   section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Pankaj Kumar' },
-    { id:'',   section:'MECH', area:'BOP',           position:'Mech Tech',        name:'Muhamed Alam' },
-    { id:'',   section:'MECH', area:'BOP',           position:'Mech Sup',         name:'Vignash' },
-    { id:'',   section:'MECH', area:'Power Block',   position:'Mech Eng',         name:'Raj Twari' },
-  ]), 'Maintenance MMD');
+  XLSX.utils.book_append_sheet(wb, buildSheet('Maintenance MMD Annual Leave 2026', [
+    { empId:'3831',   section:'MMD',  area:'QIPP',         position:'Section Head Mech',  name:'Turki Alrashed' },
+    { empId:'2323',   section:'MMD',  area:'QIPP',         position:'Mechanical Eng',     name:'Shamse Alam' },
+    { empId:'3069',   section:'MECH', area:'Power Block',  position:'Mech Eng',           name:'Saad Al Hamed' },
+    { empId:'3862',   section:'MECH', area:'BOP',          position:'Mech Eng',           name:'Yousef AlZaydi' },
+    { empId:'2262',   section:'MECH', area:'BOP',          position:'Supervisor',         name:'Abdullah Alrobia' },
+    { empId:'3147',   section:'MECH', area:'BOP/Workshop', position:'Supervisor',         name:'Mohammed AlRamadhan' },
+    { empId:'3888',   section:'MECH', area:'Power Block',  position:'Supervisor',         name:'Khaled Alsedan' },
+    { empId:'502715', section:'MECH', area:'BOP',          position:'Mech Supervisor',    name:'Vignash' },
+    { empId:'2230',   section:'MECH', area:'BOP',          position:'Mech Tech',          name:'Mohammed Alhmadi' },
+    { empId:'2360',   section:'MECH', area:'BOP',          position:'Mech Tech',          name:'Ali Almari' },
+    { empId:'3642',   section:'MECH', area:'Power Block',  position:'Mech Tech',          name:'Ali Alhadab' },
+    { empId:'501681', section:'MECH', area:'Power Block',  position:'Mech Tech',          name:'Satyanarayana' },
+    { empId:'501679', section:'MECH', area:'BOP',          position:'Mech Tech',          name:'Pankaj Kumar' },
+    { empId:'501680', section:'MECH', area:'BOP',          position:'Mech Tech',          name:'Muhammad Alam' },
+    { empId:'500435', section:'MECH', area:'Power Block',  position:'Mech Tech',          name:'Raj Kumar Tiwari' },
+  ]), 'MMD');
 
-  // ── Maintenance EMD ───────────────────────────────────
-  XLSX.utils.book_append_sheet(wb1, makeSheet([
-    { id:3755,   section:'EMD', area:'QIPP', position:'Section Head Elec',  name:'Mohammed Eid Alzaidi' },
-    { id:500431, section:'EMD', area:'QIPP', position:'Electrical Eng',     name:'Ashok Kumar Kolapalli' },
-    { id:'',     section:'EMD', area:'QIPP', position:'Electrical Sup',     name:'Mohammed Faqihi' },
-    { id:2530,   section:'EMD', area:'QIPP', position:'Electrical Sup',     name:'Imran Ali Qasim Ali' },
-    { id:3684,   section:'EMD', area:'QIPP', position:'Electrical Sup',     name:'Salih' },
-    { id:2226,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Dhanfordjim Ebreo' },
-    { id:3512,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Nasser Dumaythan Almutairi' },
-    { id:3738,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Mohammed Ghalti' },
-    { id:500434, section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Suresh Raj' },
-    { id:2241,   section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Mujtba Shaikh' },
-    { id:'',     section:'EMD', area:'QIPP', position:'Electrical Tech',    name:'Fahad Alqarni' },
-  ]), 'Maintenance EMD');
+  XLSX.utils.book_append_sheet(wb, buildSheet('Maintenance EMD Annual Leave 2026', [
+    { empId:'3755',   section:'EMD', position:'Section Head Elec', name:'Mohammed Eid Alzaidi' },
+    { empId:'500431', section:'EMD', position:'Electrical Eng',    name:'Ashok Kumar Kolapalli' },
+    { empId:'3359',   section:'EMD', position:'Electrical Sup',    name:'Mohammed Faqihi' },
+    { empId:'2530',   section:'EMD', position:'Electrical Sup',    name:'Imran Ali Qasim Ali' },
+    { empId:'3684',   section:'EMD', position:'Electrical Sup',    name:'Muhammed Salih Ibrahim' },
+    { empId:'2226',   section:'EMD', position:'Electrical Tech',   name:'Dhanfordjim Ebreo' },
+    { empId:'3512',   section:'EMD', position:'Electrical Tech',   name:'Nasser Almutairi' },
+    { empId:'3738',   section:'EMD', position:'Electrical Tech',   name:'Mohammed Ghalti' },
+    { empId:'500434', section:'EMD', position:'Electrical Tech',   name:'Suresh Raj' },
+    { empId:'3997',   section:'EMD', position:'Electrical Tech',   name:'Fahad Alqarni' },
+    { empId:'502540', section:'EMD', position:'Electrical Tech',   name:'Saleh Naji Shaytah' },
+  ]), 'EMD');
 
-  // ── Maintenance IMD ───────────────────────────────────
-  XLSX.utils.book_append_sheet(wb1, makeSheet([
-    { id:3369, section:'IMD', area:'ST/BOP',  position:'SH IC',      name:'Osama Al Amri' },
-    { id:3355, section:'IMD', area:'ST/BOP',  position:'IC Spec',    name:'BAHA JABER' },
-    { id:3893, section:'IMD', area:'GT/DCS',  position:'IC Eng',     name:'Fahad Alnazi' },
-    { id:2495, section:'IMD', area:'ST/BOP',  position:'IC Super',   name:'MURGAN' },
-    { id:2054, section:'IMD', area:'GT/DCS',  position:'IC Super',   name:'IMRAN' },
-    { id:2587, section:'IMD', area:'GT',      position:'IC Tech',    name:'ASHRAF' },
-    { id:2598, section:'IMD', area:'GT',      position:'IC Tech',    name:'MUNEER' },
-    { id:2134, section:'IMD', area:'GT',      position:'IC Tech',    name:'NADEEM' },
-    { id:4002, section:'IMD', area:'ST',      position:'IC Tech',    name:'FAISAL' },
-    { id:3983, section:'IMD', area:'ST',      position:'IC Tech',    name:'ALI' },
-    { id:2953, section:'IMD', area:'ST',      position:'IC Tech',    name:'A. FARDAN' },
-    { id:3366, section:'IMD', area:'ST',      position:'IC Tech',    name:'A. Khalifah' },
-    { id:3643, section:'IMD', area:'GT',      position:'IC Tech',    name:'khalid' },
-    { id:2639, section:'IMD', area:'ST',      position:'IC Tech',    name:'Saddam' },
-  ]), 'Maintenance IMD');
+  XLSX.utils.book_append_sheet(wb, buildSheet('Maintenance IMD Annual Leave 2026', [
+    { empId:'3369',  section:'IMD', area:'ST/BOP', position:'SH I&C',    name:'Osama Al Amri' },
+    { empId:'3355',  section:'IMD', area:'ST/BOP', position:'I&C Spec',  name:'Baha Ali Jaber' },
+    { empId:'3893',  section:'IMD', area:'GT/DCS', position:'I&C Eng',   name:'Fahad Alnazi' },
+    { empId:'502681',section:'IMD', area:'GT/DCS', position:'I&C Eng',   name:'MD Razibul Islam' },
+    { empId:'2495',  section:'IMD', area:'ST/BOP', position:'I&C Super', name:'Murugananthan' },
+    { empId:'2054',  section:'IMD', area:'GT/DCS', position:'I&C Super', name:'Imran Javed' },
+    { empId:'2587',  section:'IMD', area:'GT',     position:'I&C Tech',  name:'Malik Muhammad Ashraf' },
+    { empId:'2598',  section:'IMD', area:'GT',     position:'I&C Tech',  name:'Muhammad Munir' },
+    { empId:'2134',  section:'IMD', area:'GT',     position:'I&C Tech',  name:'Syed Nadeem Ul Haq' },
+    { empId:'4002',  section:'IMD', area:'ST',     position:'I&C Tech',  name:'Faisal Ali Alshehri' },
+    { empId:'3983',  section:'IMD', area:'ST',     position:'I&C Tech',  name:'Ali Ibrahim Ali Abalharith' },
+    { empId:'2953',  section:'IMD', area:'ST',     position:'I&C Tech',  name:'Abdulaziz Al Fardan' },
+    { empId:'3366',  section:'IMD', area:'ST',     position:'I&C Tech',  name:'Abdulaziz Al Maidani' },
+    { empId:'3643',  section:'IMD', area:'GT',     position:'I&C Tech',  name:'Khalid Alahmadi' },
+    { empId:'2639',  section:'IMD', area:'ST',     position:'I&C Tech',  name:'Mohammad Saddam Hussain Khan' },
+    { empId:'2622',  section:'IMD', area:'ST',     position:'I&C Tech',  name:'Venkata Srinivasa Rao Garaga' },
+  ]), 'IMD');
 
-  // ── Operation ─────────────────────────────────────────
-  XLSX.utils.book_append_sheet(wb1, makeSheet(
-    roster.map(p => ({
-      id:         p.empId  || '',
-      section:    'Operation',
-      area:       p.crew   || '',
-      position:   p.role   || '',
-      totalLeave: 30,
-      name:       p.name
-    }))
-  ), 'Operation');
+  XLSX.utils.book_append_sheet(wb, buildSheet('Operation Annual Leave 2026', [
+    { empId:'3167',   section:'Operation', position:'Operation Manager',  name:'Bander Khaled Aldugaish' },
+    { empId:'500129', section:'Operation', position:'Chief Chemist',      name:'Mashal Mohammed Alsumaihan' },
+    { empId:'3894',   section:'Operation', position:'Chemist',            name:'Qasem Ahmed Mohammed Al Saad' },
+    { empId:'2820',   section:'Operation', position:'Chemist',            name:'Mohammed Al Ghamdi' },
+    { empId:'3183',   section:'Operation', position:'Chemist',            name:'Tariq Mohammed Alqahtani' },
+    { empId:'500445', section:'Operation', position:'Chemist',            name:'Alvin Perillo' },
+    { empId:'2363',   section:'Operation', position:'Shift in Charge',    name:'Abdullah Al Amri' },
+    { empId:'2024',   section:'Operation', position:'Shift in Charge',    name:'Mustafa Salem' },
+    { empId:'502667', section:'Operation', position:'Shift in Charge',    name:'Zaid Almarri' },
+    { empId:'502680', section:'Operation', position:'Shift in Charge',    name:'Alaa Alrefae' },
+    { empId:'2038',   section:'Operation', position:'Shift Supervisor',   name:'Moustafa Elansari' },
+    { empId:'2025',   section:'Operation', position:'Shift Supervisor',   name:'Syed Shahnawaz Ahmed' },
+    { empId:'500446', section:'Operation', position:'Shift Supervisor',   name:'Kanaka Naga Srinivasu Kolli' },
+    { empId:'1119',   section:'Operation', position:'Shift Supervisor',   name:'Abdul Hameed' },
+    { empId:'2028',   section:'Operation', position:'CCR Operator',       name:'Juma Khan' },
+    { empId:'2041',   section:'Operation', position:'CCR Operator',       name:'Ahmed Mostafa Mohamed Meshref' },
+    { empId:'2364',   section:'Operation', position:'CCR Operator',       name:'Sami Hamdan' },
+    { empId:'2294',   section:'Operation', position:'CCR Operator',       name:'Veera Prasad' },
+    { empId:'501234', section:'Operation', position:'CCR Operator',       name:'Lakshmy Prasad' },
+    { empId:'3251',   section:'Operation', position:'CCR Operator',       name:'Abdullah Mohiddin Alshahrani' },
+    { empId:'2369',   section:'Operation', position:'CCR Operator',       name:'Rashed Alhajri' },
+    { empId:'501370', section:'Operation', position:'CCR Operator',       name:'Yasser Althuiqeb' },
+    { empId:'502699', section:'Operation', position:'CCR Operator',       name:'Albara Tareq M Barri' },
+    { empId:'2711',   section:'Operation', position:'CCR Operator',       name:'Shaheer Yousaf' },
+    { empId:'2941',   section:'Operation', position:'CCR Operator',       name:'Saleh Mohammed Al Amri' },
+    { empId:'502707', section:'Operation', position:'CCR Operator',       name:'Faisal Abdullah Alotaibi' },
+    { empId:'2366',   section:'Operation', position:'CCR Operator',       name:'Adam Mohammed Alhuzum' },
+    { empId:'2512',   section:'Operation', position:'CCR Operator',       name:'Hassan Arshad' },
+    { empId:'2726',   section:'Operation', position:'CCR Operator',       name:'Ahmed Fathy' },
+    { empId:'501388', section:'Operation', position:'CCR Operator',       name:'Waleed Fayad' },
+    { empId:'3664',   section:'Operation', position:'CCR Operator',       name:'Mukhtar Ali' },
+    { empId:'3668',   section:'Operation', position:'CCR Operator',       name:'Mohamed Nawas' },
+    { empId:'3142',   section:'Operation', position:'CCR Operator',       name:'Mohammad Algarni' },
+    { empId:'3672',   section:'Operation', position:'CCR Operator',       name:'Prathapan' },
+    { empId:'2035',   section:'Operation', position:'Filed Operator',     name:'Saravanakumar Madhaiyan' },
+    { empId:'2237',   section:'Operation', position:'Filed Operator',     name:'Mark Ramirez' },
+    { empId:'2283',   section:'Operation', position:'Filed Operator',     name:'Norbie Cruz' },
+    { empId:'3262',   section:'Operation', position:'Filed Operator',     name:'Mohammed Mulhim' },
+    { empId:'3807',   section:'Operation', position:'Filed Operator',     name:'Mohammed Al Ghamdi' },
+    { empId:'2492',   section:'Operation', position:'Filed Operator',     name:'Rajesh Muniasamy' },
+    { empId:'500440', section:'Operation', position:'Filed Operator',     name:'Izhar Ali' },
+    { empId:'3229',   section:'Operation', position:'Filed Operator',     name:'Saad Al Enize' },
+    { empId:'3865',   section:'Operation', position:'Filed Operator',     name:'Mohamed Al Dossary' },
+    { empId:'2665',   section:'Operation', position:'Filed Operator',     name:'Abdullah Al Hajri' },
+    { empId:'3617',   section:'Operation', position:'Filed Operator',     name:'Bakr Abdulmajeed' },
+    { empId:'500439', section:'Operation', position:'Filed Operator',     name:'Mohammed Afnan' },
+    { empId:'3973',   section:'Operation', position:'Filed Operator',     name:'Ahmed Alsaqoor' },
+    { empId:'501885', section:'Operation', position:'Filed Operator',     name:'Khalid Saleh Khalousi' },
+    { empId:'2912',   section:'Operation', position:'Filed Operator',     name:'Bader AlSubait' },
+    { empId:'501369', section:'Operation', position:'Filed Operator',     name:'Abdullah Altulayhi' },
+    { empId:'3602',   section:'Operation', position:'Filed Operator',     name:'Saud Saad Abdulkarim' },
+    { empId:'3511',   section:'Operation', position:'Filed Operator',     name:'Abdelaziz Al Harbi' },
+    { empId:'2202',   section:'Operation', position:'Filed Operator',     name:'Abdulwahab Al-Shehab' },
+    { empId:'500438', section:'Operation', position:'Filed Operator',     name:'Purushothaman' },
+    { empId:'2954',   section:'Operation', position:'Filed Operator',     name:'Fawaz Al Qahtani' },
+    { empId:'',       section:'Out Source', position:'Planner',           name:'Amal Sharaf Alhassan' },
+    { empId:'',       section:'Out Source', position:'Planner',           name:'Hadeel Hani Alrashood' },
+    { empId:'',       section:'Out Source', position:'CCR',               name:'Ahmed Fawaz' },
+    { empId:'4091',   section:'Excess EWA', position:'Filed Operator',   name:'Amjad Alruwaytie' },
+    { empId:'4098',   section:'Excess EWA', position:'Filed Operator',   name:'Abderahman Al Anezie' },
+    { empId:'4096',   section:'Excess EWA', position:'Filed Operator',   name:'Abderahman Al Baqmi' },
+    { empId:'4097',   section:'Excess EWA', position:'Filed Operator',   name:'Faris Al Dawasri' },
+    { empId:'4108',   section:'Excess EWA', position:'Filed Operator',   name:'Ali Al Qahtani' },
+    { empId:'4094',   section:'Excess EWA', position:'Filed Operator',   name:'Saad Al Shahrani' },
+    { empId:'4095',   section:'Excess EWA', position:'Filed Operator',   name:'Abdulhadi Mohammed Saleh' },
+    { empId:'4081',   section:'Excess EWA', position:'Filed Operator',   name:'Mohamed Al Hakami' },
+    { empId:'4101',   section:'Excess EWA', position:'Filed Operator',   name:'Saad Salem Al Hajiri' },
+  ]), 'Operation ');
 
-  XLSX.writeFile(wb1, 'AnnualLeave_2026.xlsx');
-
+  XLSX.writeFile(wb, 'QIPP-Annual-Leave-2026.xlsx');
 } // ← closes exportToExcel()
 
 // ── BOOT ─────────────────────────────────────────────────
