@@ -289,8 +289,10 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Lakshmy Prasad"
+      ]
     },
     {
       "id": 13,
@@ -313,8 +315,10 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Veera Prasad"
+      ]
     },
     {
       "id": 14,
@@ -702,7 +706,13 @@
       "crew": "D",
       "role": "Local Operator",
       "color": "crew-lightviolet",
-      "leaves": [],
+      "leaves": [
+        {
+          "start": "2026-05-25",
+          "end": "2026-06-05",
+          "type": "Planned"
+        }
+      ],
       "conflict": false,
       "conflictWith": []
     },
