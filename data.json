@@ -169,5 +169,21 @@
       "conflict": false, "conflictWith": []
     },
     {
-      "id": 22, "name": "Bakr Abdulmajeed", "fullName": "Bakr Abdulmajed Alkhabeerani",
-      "empId": "3617", "position": "60
+      {
+  "id": 22,
+  "name": "Bakr Abdulmajeed",
+  "fullName": "Bakr Abdulmajed Alkhabeerani",
+  "empId": "3617",
+  "position": "60004628",
+  "joiningDate": "2025-08-05",
+  "nationality": "Saudi Arabian",
+  "iqama": "",
+  "employmentType": "Direct Hire",
+  "company": "NOMAC",
+  "crew": "A",
+  "role": "Local Operator",
+  "color": "crew-lightorange",
+  "leaves": [],
+  "conflict": false,
+  "conflictWith": []
+}
