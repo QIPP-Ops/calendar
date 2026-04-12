@@ -843,7 +843,13 @@
       "crew": "C",
       "role": "Local Operator",
       "color": "crew-lightviolet",
-      "leaves": [],
+      "leaves": [
+        {
+          "start": "2026-05-07",
+          "end": "2026-06-14",
+          "type": "Applied on SAP"
+        }
+      ],
       "conflict": false,
       "conflictWith": []
     },
