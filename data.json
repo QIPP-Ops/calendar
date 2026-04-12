@@ -69,8 +69,10 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Mohammad Algarni"
+      ]
     },
     {
       "id": 4,
@@ -1083,10 +1085,17 @@
           "start": "2026-04-17",
           "end": "2026-05-12",
           "type": "Applied on SAP"
+        },
+        {
+          "start": "2026-06-12",
+          "end": "2026-03-13",
+          "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Juma Khan"
+      ]
     }
   ]
 }
