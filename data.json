@@ -119,8 +119,7 @@
       ],
       "conflict": true,
       "conflictWith": [
-        "Mark Ramirez",
-        "Mohammed Afnan"
+        "Mark Ramirez"
       ]
     },
     {
@@ -218,8 +217,7 @@
       ],
       "conflict": true,
       "conflictWith": [
-        "Ahmed Alsaqoor",
-        "Mohammed Afnan"
+        "Ahmed Alsaqoor"
       ]
     },
     {
@@ -715,11 +713,8 @@
           "type": "Planned"
         }
       ],
-      "conflict": true,
-      "conflictWith": [
-        "Ahmed Alsaqoor",
-        "Mark Ramirez"
-      ]
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 33,
@@ -1083,7 +1078,13 @@
       "crew": "General",
       "role": "CCR Operator",
       "color": "crew-lightblue",
-      "leaves": [],
+      "leaves": [
+        {
+          "start": "2026-04-01",
+          "end": "2026-04-14",
+          "type": "Applied on SAP"
+        }
+      ],
       "conflict": false,
       "conflictWith": []
     }
