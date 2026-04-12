@@ -117,8 +117,10 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Mark Ramirez"
+      ]
     },
     {
       "id": 6,
@@ -213,8 +215,10 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": false,
-      "conflictWith": []
+      "conflict": true,
+      "conflictWith": [
+        "Ahmed Alsaqoor"
+      ]
     },
     {
       "id": 10,
@@ -276,7 +280,7 @@
       "employmentType": "Direct Hire",
       "company": "NOMAC",
       "crew": "D",
-      "role": "Supervisor",
+      "role": "CCR Operator",
       "color": "crew-green",
       "leaves": [
         {
