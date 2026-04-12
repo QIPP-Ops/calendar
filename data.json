@@ -189,10 +189,8 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": true,
-      "conflictWith": [
-        "Norbie Cruz"
-      ]
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 9,
@@ -311,10 +309,8 @@
           "type": "Applied on SAP"
         }
       ],
-      "conflict": true,
-      "conflictWith": [
-        "Saleh Mohammed Al Amri"
-      ]
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 14,
@@ -829,10 +825,8 @@
       "role": "Local Operator",
       "color": "crew-lightviolet",
       "leaves": [],
-      "conflict": true,
-      "conflictWith": [
-        "Waleed Fayad"
-      ]
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 40,
@@ -921,10 +915,8 @@
       "role": "CCR Operator",
       "color": "crew-lightblue",
       "leaves": [],
-      "conflict": true,
-      "conflictWith": [
-        "Lakshmy Prasad"
-      ]
+      "conflict": false,
+      "conflictWith": []
     },
     {
       "id": 45,
@@ -1045,7 +1037,7 @@
       "iqama": "",
       "employmentType": "Direct Hire",
       "company": "NOMAC",
-      "crew": "General",
+      "crew": "D",
       "role": "Filed Operator",
       "color": "crew-lightorange",
       "leaves": [],
