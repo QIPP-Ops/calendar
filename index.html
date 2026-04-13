@@ -696,40 +696,55 @@ async function exportToExcel() {
     // 3. Load the workbook using ExcelJS
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(bytes.buffer);
-    const ws = workbook.worksheets[0]; // Select the first sheet
+    const ws = workbook.worksheets[0]; 
 
-    // Helper to find person by ID
-    function findRP(empId) {
-      const id = String(empId || '').trim();
-      return roster.find(p => String(p.empId).trim() === id);
-    }
+    let matchesFound = 0;
 
-    // 4. Loop through the rows. Data starts at Row 6. Scanning down to Row 200.
-    for (let r = 6; r <= 200; r++) {
-      const idCell = ws.getCell(r, 1); // Col A is 1
+    // 4. SMARTER LOOP: Scan rows 2 to 300 to capture everyone
+    for (let r = 2; r <= 300; r++) {
+      let rp = null;
       
-      // Safely extract ID (handles plain text or Excel formulas)
-      let rawId = idCell.value;
-      if (typeof rawId === 'object' && rawId !== null) rawId = rawId.result || rawId.text || '';
-      const empId = String(rawId || '').trim();
+      // Scan columns A through I (1-9) for either the Emp ID or Name
+      for (let c = 1; c <= 9; c++) {
+        let cell = ws.getCell(r, c);
+        let cellVal = cell.text || cell.value;
+        
+        // Safely extract text whether it's a formula, plain text, or rich text
+        if (typeof cellVal === 'object' && cellVal !== null) {
+          cellVal = cellVal.result || cellVal.text || (cellVal.richText ? cellVal.richText.map(t=>t.text).join('') : '');
+        }
+        
+        const strVal = String(cellVal).trim().toLowerCase();
+        if (!strVal) continue;
 
-      if (!empId) continue;
+        // Try to match the Emp ID
+        if (!rp) rp = roster.find(p => String(p.empId).trim() !== '' && String(p.empId).trim().toLowerCase() === strVal);
+        
+        // Try to match the Name or Full Name
+        if (!rp) rp = roster.find(p => p.name && strVal.includes(String(p.name).trim().toLowerCase()));
+        if (!rp) rp = roster.find(p => p.fullName && strVal.includes(String(p.fullName).trim().toLowerCase()));
 
-      const rp = findRP(empId);
+        if (rp) break; // Found a match! Stop scanning columns for this row.
+      }
+
+      // If no person matched this row, skip to the next row in Excel
       if (!rp) continue;
+      
+      matchesFound++;
 
       // Clear existing calendar days for this person (Col 10 to Col 374)
       for (let c = 10; c <= 374; c++) {
         const cell = ws.getCell(r, c);
         cell.value = null;
-        cell.fill = { type: 'pattern', pattern: 'none' }; 
+        cell.fill = { type: 'pattern', pattern: 'none' }; // Clears color, keeps borders
       }
 
       // Paint the Leaves onto the Calendar
       if (rp.leaves && rp.leaves.length > 0) {
         for (const lv of rp.leaves) {
-          let cur = new Date(lv.start + 'T00:00:00');
-          let end = new Date(lv.end + 'T00:00:00');
+          // Use T12:00:00Z to prevent Timezone bugs shifting the date backward!
+          let cur = new Date(lv.start + 'T12:00:00Z');
+          let end = new Date(lv.end + 'T12:00:00Z');
 
           while (cur <= end) {
             const key = cur.toISOString().slice(0, 10);
@@ -739,17 +754,12 @@ async function exportToExcel() {
               const cell = ws.getCell(r, c);
               const isSAP = (lv.type === 'Applied on SAP');
 
-              // Set the "S" or "P" text
               cell.value = isSAP ? 'S' : 'P';
-
-              // FIXED: Changed 'arg' to 'argb'
               cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
                 fgColor: { argb: isSAP ? 'FFFF7C80' : 'FFFFFF00' } // Red or Yellow
               };
-
-              // FIXED: Changed 'arg' to 'argb'
               cell.font = { bold: true, color: { argb: 'FF000000' } };
               cell.alignment = { vertical: 'middle', horizontal: 'center' };
             }
@@ -757,6 +767,11 @@ async function exportToExcel() {
           }
         }
       }
+    }
+
+    // SAFETY CHECK: Warn if no one was found!
+    if (matchesFound === 0) {
+      alert("WARNING: The script ran, but couldn't match ANY names or IDs from your dashboard to Columns A-I in the Excel file.");
     }
 
     // 5. Trigger the download!
@@ -769,10 +784,11 @@ async function exportToExcel() {
     link.click();
     document.body.removeChild(link);
 
-    showToast('Exported successfully!', 'success');
+    if (matchesFound > 0) {
+      showToast(`Exported successfully! Updated ${matchesFound} people.`, 'success');
+    }
 
   } catch (error) {
-    // If it ever fails again, it will pop up an alert telling us exactly why!
     console.error("Excel Export Error:", error);
     alert("Error generating Excel: " + error.message);
   }
