@@ -673,10 +673,9 @@ async function exportToExcel() {
     showToast('Generating Excel...', 'saving', 5000);
 
     // 1. Map every day of 2026 to its exact Excel Column Index
-    // In ExcelJS, columns are 1-indexed. Column J = 10.
     const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     const dateToCol = {};
-    let colIdx = 10; 
+    let colIdx = 10; // Column J
 
     for (let m = 0; m < 12; m++) {
       for (let d = 1; d <= MONTH_DAYS[m]; d++) {
@@ -685,22 +684,18 @@ async function exportToExcel() {
       }
     }
 
-    // 2. Decode the Base64 template into an ArrayBuffer
-    const binaryString = window.atob(_NEW_TEMPLATE_B64);
-    const binaryLen = binaryString.length;
-    const bytes = new Uint8Array(binaryLen);
-    for (let i = 0; i < binaryLen; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    // 2. NEW, SAFER BASE64 DECODING (Prevents file byte corruption)
+    const response = await fetch("data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + _NEW_TEMPLATE_B64);
+    const buffer = await response.arrayBuffer();
 
     // 3. Load the workbook using ExcelJS
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(bytes.buffer);
+    await workbook.xlsx.load(buffer);
     const ws = workbook.worksheets[0]; 
 
     let matchesFound = 0;
 
-    // 4. SMARTER LOOP: Scan rows 2 to 300 to capture everyone
+    // 4. Scan rows 2 to 300
     for (let r = 2; r <= 300; r++) {
       let rp = null;
       
@@ -709,7 +704,6 @@ async function exportToExcel() {
         let cell = ws.getCell(r, c);
         let cellVal = cell.text || cell.value;
         
-        // Safely extract text whether it's a formula, plain text, or rich text
         if (typeof cellVal === 'object' && cellVal !== null) {
           cellVal = cellVal.result || cellVal.text || (cellVal.richText ? cellVal.richText.map(t=>t.text).join('') : '');
         }
@@ -717,32 +711,26 @@ async function exportToExcel() {
         const strVal = String(cellVal).trim().toLowerCase();
         if (!strVal) continue;
 
-        // Try to match the Emp ID
         if (!rp) rp = roster.find(p => String(p.empId).trim() !== '' && String(p.empId).trim().toLowerCase() === strVal);
-        
-        // Try to match the Name or Full Name
         if (!rp) rp = roster.find(p => p.name && strVal.includes(String(p.name).trim().toLowerCase()));
         if (!rp) rp = roster.find(p => p.fullName && strVal.includes(String(p.fullName).trim().toLowerCase()));
 
-        if (rp) break; // Found a match! Stop scanning columns for this row.
+        if (rp) break; 
       }
 
-      // If no person matched this row, skip to the next row in Excel
       if (!rp) continue;
-      
       matchesFound++;
 
-      // Clear existing calendar days for this person (Col 10 to Col 374)
+      // FIX #1: Safely clear cells without corrupting styles.xml or sharedStrings.xml
       for (let c = 10; c <= 374; c++) {
         const cell = ws.getCell(r, c);
-        cell.value = null;
-        cell.fill = { type: 'pattern', pattern: 'none' }; // Clears color, keeps borders
+        cell.value = '';       // Use empty string instead of 'null'
+        delete cell.fill;      // Delete the fill entirely instead of forcing a 'none' pattern
       }
 
       // Paint the Leaves onto the Calendar
       if (rp.leaves && rp.leaves.length > 0) {
         for (const lv of rp.leaves) {
-          // Use T12:00:00Z to prevent Timezone bugs shifting the date backward!
           let cur = new Date(lv.start + 'T12:00:00Z');
           let end = new Date(lv.end + 'T12:00:00Z');
 
@@ -758,25 +746,24 @@ async function exportToExcel() {
               cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: isSAP ? 'FFFF7C80' : 'FFFFFF00' } // Red or Yellow
+                fgColor: { argb: isSAP ? 'FFFF7C80' : 'FFFFFF00' } 
               };
               cell.font = { bold: true, color: { argb: 'FF000000' } };
               cell.alignment = { vertical: 'middle', horizontal: 'center' };
             }
-            cur.setDate(cur.getDate() + 1); // Move to next day
+            cur.setDate(cur.getDate() + 1); 
           }
         }
       }
     }
 
-    // SAFETY CHECK: Warn if no one was found!
     if (matchesFound === 0) {
       alert("WARNING: The script ran, but couldn't match ANY names or IDs from your dashboard to Columns A-I in the Excel file.");
     }
 
     // 5. Trigger the download!
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const outBuffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([outBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = 'Master-Operations-Roster-2026.xlsx';
